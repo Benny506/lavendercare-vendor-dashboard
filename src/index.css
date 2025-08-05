@@ -3,6 +3,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: 'GT Walsheim Pro';
+  src: url('/fonts/gt-walsheim-font-family/GT-Walsheim-Regular-Trial-BF651b7fc71a47d.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
 @theme {
   /* Grey */
   --color-grey-50: #ffffff;
@@ -87,6 +94,9 @@
   --color-brown-700: #a75032;
   --color-brown-800: #813e27;
   --color-brown-900: #632f1e;
+
+  --background-image: url('/assets/bg-image.svg');
+  --background-image-2: url('/assets/individual-bg-image.svg');
 }
 
 
@@ -202,7 +212,29 @@
     @apply border-border outline-ring/50;
   }
 
+  html,
+  body {
+    /* overflow-x: hidden; */
+    font-family: 'GT Walsheim Pro', sans-serif;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bg-img {
+    background-image: var(--background-image);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+  }
+
+  .bg-img2 {
+    background-image: var(--background-image-2);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
   }
 }
