@@ -10,6 +10,8 @@ import CreateNewPassword from "@/pages/auth/forgot-password/CreateNewPassword";
 import PasswordRecovered from "@/pages/auth/forgot-password/PasswordRecovered";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import Dashboard from "@/pages/dashboard/Dashboard";
+import Services from "@/pages/services/Services";
+import ServiceDetails from "@/pages/services/ServiceDetails";
 
 const AppRoutes = () => {
   return (
@@ -33,6 +35,8 @@ const AppRoutes = () => {
       {/* Dashboard  */}
       <Route path="/" element={<DashboardLayout />}>
         <Route index element={<Dashboard />} />
+        <Route path="services" element={<Services />} />
+        <Route path="services/service" element={<ServiceDetails />} />
       </Route>
     </Routes>
   );

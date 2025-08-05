@@ -81,3 +81,43 @@ export const statusColors = {
   Cancelled: "bg-gray-100 text-gray-500",
   Missed: "bg-red-100 text-red-600",
 };
+
+export const servicesData = {
+  active: 23,
+  inactive: null,
+}
+
+export const services = [
+  {
+    id: 1,
+    title: "Massage therapy",
+    price: "$4000/Session",
+    tags: ["Massage", "Therapy"],
+    status: "Active",
+    description: "Prospective clients can see this service",
+  },
+  {
+    id: 2,
+    title: "Massage therapy",
+    price: "$4000/Session",
+    tags: ["Massage", "Therapy"],
+    status: "Hidden",
+    description: "Prospective clients can not see this service",
+  },
+  {
+    id: 3,
+    title: "Massage therapy",
+    price: "$4000/Session",
+    tags: ["Massage", "Therapy"],
+    status: "Rejected",
+    description: "Service did not pass our checks",
+  },
+  {
+    id: 4,
+    title: "Massage therapy",
+    price: "$4000/Session",
+    tags: ["Massage", "Therapy"],
+    status: "Pending",
+    description: "This service is being reviewed",
+  },
+];

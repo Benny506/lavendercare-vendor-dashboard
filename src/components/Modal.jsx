@@ -15,7 +15,7 @@ export default function Modal({
         <div
             className={`fixed inset-0 z-50 flex items-center justify-center backdrop-brightness-50 ${styles.overlay || ""}`}
         >
-            <div className={`bg-img rounded-xl p-4 w-full ${styles.wrapper || "max-w-md shadow-xl relative"}`}>
+            <div className={`bg-img rounded-2xl p-4 w-full ${styles.wrapper || "max-w-md shadow-xl relative"}`}>
                 <div className={`bg-white rounded-lg shadow-lg p-6 w-full ${width} ${styles.content || ""}`}>
 
                     {/* Image/Icon */}
