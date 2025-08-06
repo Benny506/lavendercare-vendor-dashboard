@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react";
 import React from "react";
 
 export default function Modal({
@@ -9,7 +10,8 @@ export default function Modal({
     secondaryButton = "",
     hideFooter = false,
     width = "max-w-md",
-    styles = {}
+    styles = {},
+    onClose,
 }) {
     return (
         <div
@@ -17,6 +19,18 @@ export default function Modal({
         >
             <div className={`bg-img rounded-2xl p-4 w-full ${styles.wrapper || "max-w-md shadow-xl relative"}`}>
                 <div className={`bg-white rounded-lg shadow-lg p-6 w-full ${width} ${styles.content || ""}`}>
+                    {/* Close Icon */}
+                    {onClose && (
+                        <div className={`${styles.closeIconWrapper || "flex justify-end"}`}>
+                            <button
+                                onClick={onClose}
+                                className={`${styles.closeButton || "text-grey-600 hover:text-grey-800"}`}
+                                aria-label="Close modal"
+                            >
+                                <Icon icon="iconoir:cancel" className={`${styles.closeIcon || "w-7 h-7"}`} />
+                            </button>
+                        </div>
+                    )}
 
                     {/* Image/Icon */}
                     {image && (

@@ -12,6 +12,8 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import Services from "@/pages/services/Services";
 import ServiceDetails from "@/pages/services/ServiceDetails";
+import Bookings from "@/pages/bookings/Bookings";
+import BookingDetails from "@/pages/bookings/BookingDetails";
 
 const AppRoutes = () => {
   return (
@@ -37,6 +39,8 @@ const AppRoutes = () => {
         <Route index element={<Dashboard />} />
         <Route path="services" element={<Services />} />
         <Route path="services/service" element={<ServiceDetails />} />
+        <Route path="bookings" element={<Bookings />} />
+        <Route path="bookings/booking" element={<BookingDetails />} />
       </Route>
     </Routes>
   );

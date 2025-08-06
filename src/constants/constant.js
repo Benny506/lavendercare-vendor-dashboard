@@ -121,3 +121,51 @@ export const services = [
     description: "This service is being reviewed",
   },
 ];
+
+// Bookings 
+export const bookingsInfo = [
+  { title: "Total Bookings", value: 234, color: "bg-white", icon: null },
+  { title: "Upcoming Bookings", value: 23, color: "bg-primary-50 text-warning-500", icon: "uil:calender" },
+  { title: "Ongoing Bookings", value: 232, color: "bg-primary-50 text-success-500", icon: "uil:calender" },
+  { title: "Completed Bookings", value: 23, color: "bg-primary-50 text-primary-500", icon: "uil:calender" },
+  { title: "Missed Bookings", value: 2323, color: "bg-primary-50 text-error-500", icon: "uil:calender" },
+  { title: "Cancelled Bookings", value: 32, color: "bg-primary-50 text-grey-600", icon: "uil:calender" },
+];
+
+export const bookingsTableData = [
+  {
+    number: "#we3ewq233213",
+    date: "23-08-23 / 03:00 - 4:00PM",
+    service: "Baby sitting, Full body Massage",
+    location: "Lekki, Lagos",
+    status: "Upcoming",
+  },
+  {
+    number: "#we3ewq233213",
+    date: "23-08-23 / 03:00 - 4:00PM",
+    service: "Baby sitting, Full body Massage",
+    location: "Lekki, Lagos",
+    status: "Ongoing",
+  },
+  {
+    number: "#we3ewq233213",
+    date: "23-08-23 / 03:00 - 4:00PM",
+    service: "Baby sitting, Full body Massage",
+    location: "Lekki, Lagos",
+    status: "Attended",
+  },
+  {
+    number: "#we3ewq233213",
+    date: "23-08-23 / 03:00 - 4:00PM",
+    service: "Baby sitting",
+    location: "Lekki, Lagos",
+    status: "Cancelled",
+  },
+  {
+    number: "#we3ewq233213",
+    date: "23-08-23 / 03:00 - 4:00PM",
+    service: "Baby sitting, Full body Massage",
+    location: "Lekki, Lagos",
+    status: "Missed",
+  },
+];
