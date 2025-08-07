@@ -14,6 +14,7 @@ import Services from "@/pages/services/Services";
 import ServiceDetails from "@/pages/services/ServiceDetails";
 import Bookings from "@/pages/bookings/Bookings";
 import BookingDetails from "@/pages/bookings/BookingDetails";
+import Wallet from "../pages/wallet/Wallet";
 
 const AppRoutes = () => {
   return (
@@ -41,6 +42,7 @@ const AppRoutes = () => {
         <Route path="services/service" element={<ServiceDetails />} />
         <Route path="bookings" element={<Bookings />} />
         <Route path="bookings/booking" element={<BookingDetails />} />
+        <Route path="wallet" element={<Wallet />} />
       </Route>
     </Routes>
   );

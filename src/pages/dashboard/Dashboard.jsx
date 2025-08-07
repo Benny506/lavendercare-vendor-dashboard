@@ -16,11 +16,38 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Icon } from "@iconify/react";
+import Table from "@/components/Table";
 import VerifyAccount from "./verification/VerifyAccount";
 import VerificationForm from "./verification/VerificationForm";
 import InProgress from "./verification/InProgress";
 
 export default function Dashboard() {
+  // Table columns configuration for recent bookings
+  const columns = [
+    { key: "bookingNumber", label: "Booking Number" },
+    { key: "bookingDate", label: "Booking Date" },
+    { key: "serviceBooked", label: "Service Booked" },
+    { key: "location", label: "Location" },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => (
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[row.status]}`}>
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      key: "action",
+      label: "Actions",
+      render: (row) => (
+        <button className="bg-primary-600 text-white px-4 py-1 rounded-full text-sm">
+          View
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className="flex-1 p-4 min-h-screen">
       {/* Stats Section */}
@@ -167,60 +194,25 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {bookingsData.length > 0 ? (
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="text-gray-500 border-b border-t border-gray-200">
-                <th className="py-3 px-3 text-md font-bold">Booking Number</th>
-                <th className="py-3 px-3 text-md font-bold">Booking Date</th>
-                <th className="py-3 px-3 text-md font-bold">Service Booked</th>
-                <th className="py-3 px-3 text-md font-bold">Location</th>
-                <th className="py-3 px-3 text-md font-bold">Status</th>
-                <th className="py-3 px-3 text-md font-bold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookingsData.map((item, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50 last:border-b-0">
-                  <td className="py-6 px-3 text-md font-semibold">
-                    {item.bookingNumber}
-                  </td>
-                  <td className="py-6 px-3 text-md font-semibold">
-                    {item.bookingDate}
-                  </td>
-                  <td className="py-6 px-3 text-md font-semibold">
-                    {item.serviceBooked}
-                  </td>
-                  <td className="py-6 px-3 text-md font-semibold">
-                    {item.location}
-                  </td>
-                  <td className="py-6 px-3 text-md font-semibold">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="py-6 px-3 text-md font-semibold">
-                    <button className="bg-primary-600 text-white px-4 py-1 rounded-full text-sm">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Icon icon="uil:calender" className="w-16 h-16 mb-4 text-primary-700" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              No data to display
-            </h3>
-            <p className="text-sm text-gray-500">
-              Recent appointments will appear here
-            </p>
-          </div>
-        )}
+        <Table
+          columns={columns}
+          data={bookingsData}
+          styles={{
+            wrapper: "overflow-x-auto",
+            table: "w-full text-sm text-left",
+            thead: "",
+            headerRow: "text-gray-500 border-b border-t border-gray-200",
+            headerCell: "py-3 px-3 text-md font-bold",
+            tbody: "",
+            row: "border-b hover:bg-gray-50 last:border-b-0",
+            cell: "py-6 px-3 text-md font-semibold",
+            emptyWrapper: "flex flex-col items-center justify-center py-12",
+            icon: "w-16 h-16 mb-4 text-primary-700",
+            emptyTitleText: "No data to display",
+            emptySubText: "Recent appointments will appear here",
+            emptyIcon: "uil:calender"
+          }}
+        />
       </div>
 
       {/* Uncomment to show verify account modal  */}

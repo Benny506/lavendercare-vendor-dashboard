@@ -4,12 +4,18 @@ import Table from "@/components/Table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import Pagination from "@/components/Pagination";
+import CancelAppointment from "./CancelAppointment";
+import ConfirmAppointmentSuccess from "./ConfirmAppointmentSuccess";
+import ConfirmAppointment from "./ConfirmAppointment";
+import CancelAppointmentSuccess from "./CancelAppointmentSuccess";
 
 const Bookings = () => {
     const [filter, setFilter] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
 
-    // ✅ Table Columns
+    // Table Columns
     const columns = [
         { key: "number", label: "Booking Number" },
         { key: "date", label: "Booking Date" },
@@ -31,6 +37,15 @@ const Bookings = () => {
                 </span>
             ),
         },
+        {
+            key: "action",
+            label: "Action",
+            render: (row) => (
+                <button className="px-4 py-1 text-sm bg-primary-500 text-grey-50 rounded-4xl">
+                    View
+                </button>
+            ),
+        },
     ];
 
     // ✅ Filter & Search
@@ -41,26 +56,11 @@ const Bookings = () => {
                 item.service.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    // ✅ Pagination (static UI as per image)
-    const pagination = (
-        <div className="flex items-center justify-between px-4 py-3">
-            <button className="text-gray-600 hover:text-purple-600">&larr; Previous</button>
-            <div className="flex gap-2">
-                {[1, 2, 3, "...", 10].map((page, i) => (
-                    <button
-                        key={i}
-                        className={`px-3 py-1 rounded-full ${page === 1
-                            ? "bg-purple-100 text-purple-700"
-                            : "text-gray-600 hover:bg-gray-100"
-                            }`}
-                    >
-                        {page}
-                    </button>
-                ))}
-            </div>
-            <button className="text-gray-600 hover:text-purple-600">Next &rarr;</button>
-        </div>
-    );
+    const totalPages = 10;
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
 
     return (
         <div className="mt-4">
@@ -126,15 +126,8 @@ const Bookings = () => {
                 <Table
                     columns={columns}
                     data={filteredData}
-                    pagination={pagination}
-                    headerExtra={<span className="text-gray-600">Action</span>}
-                    rowExtra={(row) => (
-                        <button className="px-4 py-1 text-sm bg-primary-500 text-grey-50 rounded-4xl">
-                            View
-                        </button>
-                    )}
                     styles={{
-                        wrapper: "p-3",
+                        wrapper: "p-3 overflow-x-auto",
                         table: "w-full border-collapse -mt-3",
                         headerRow: "bg-grey-50 text-left text-gray-700 text-sm border-b border-grey-100",
                         headerCell: "p-4 font-semibold",
@@ -146,8 +139,21 @@ const Bookings = () => {
                         emptySubText: "Your bookings will appear here once added",
                         emptyIcon: "uil:schedule"
                     }}
+                    pagination={
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
+                    }
                 />
             </div>
+
+            {/* Modals (uncomment to activate) */}
+            {/* <CancelAppointment /> */}
+            {/* <ConfirmAppointmentSuccess /> */}
+            {/* <ConfirmAppointment /> */}
+            {/* <CancelAppointmentSuccess /> */}
         </div>
     );
 };

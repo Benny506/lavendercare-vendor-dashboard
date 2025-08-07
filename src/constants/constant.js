@@ -169,3 +169,69 @@ export const bookingsTableData = [
     status: "Missed",
   },
 ];
+
+// Wallet 
+export const walletInfo = [
+  { title: "Available Balance", value: 7200000.00, color: "bg-white text-success-500", icon: "ic:outline-account-balance-wallet" },
+  { title: "Pending Balance", value: 7200000.00, color: "bg-primary-50 text-error-500", icon: "ic:outline-account-balance-wallet" },
+  { title: "Withdrawn", value: 7200000.00, color: "bg-primary-50 text-grey-700", icon: "ic:outline-account-balance-wallet" },
+];
+
+export const walletTransactions = [
+  {
+    id: "txn1",
+    withdrawalDate: "Jun 14, 2024 / 4:00PM",
+    referenceId: "12392884218WERSDDAAI",
+    receivingBankAccount: "Access Bank / 812171762935",
+    amount: "23,000,000",
+    status: "Processing",
+  },
+  {
+    id: "txn2",
+    withdrawalDate: "Jun 14, 2024 / 4:00PM",
+    referenceId: "12392884218WERSDDAAI",
+    receivingBankAccount: "Access Bank / 812171762935",
+    amount: "23,000,000",
+    status: "Success",
+  },
+  {
+    id: "txn3",
+    withdrawalDate: "Jun 14, 2024 / 4:00PM",
+    referenceId: "12392884218WERSDDAAI",
+    receivingBankAccount: "Access Bank / 812171762935",
+    amount: "23,000,000",
+    status: "Success",
+  },
+  {
+    id: "txn4",
+    withdrawalDate: "Jun 14, 2024 / 4:00PM",
+    referenceId: "12392884218WERSDDAAI",
+    receivingBankAccount: "Access Bank / 812171762935",
+    amount: "23,000,000",
+    status: "Processing",
+  },
+  {
+    id: "txn5",
+    withdrawalDate: "Jun 14, 2024 / 4:00PM",
+    referenceId: "12392884218WERSDDAAI",
+    receivingBankAccount: "Access Bank / 812171762935",
+    amount: "23,000,000",
+    status: "Failed",
+  },
+  {
+    id: "txn6",
+    withdrawalDate: "Jun 14, 2024 / 4:00PM",
+    referenceId: "12392884218WERSDDAAI",
+    receivingBankAccount: "Access Bank / 812171762935",
+    amount: "23,000,000",
+    status: "Success",
+  },
+  {
+    id: "txn7",
+    withdrawalDate: "Jun 14, 2024 / 4:00PM",
+    referenceId: "12392884218WERSDDAAI",
+    receivingBankAccount: "Access Bank / 812171762935",
+    amount: "23,000,000",
+    status: "Success",
+  },
+];

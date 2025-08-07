@@ -1,7 +1,7 @@
 import Modal from "@/components/Modal";
 import React, { useState } from "react";
 
-export default function ConfirmationModalExample() {
+export default function ConfirmAppointment() {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
