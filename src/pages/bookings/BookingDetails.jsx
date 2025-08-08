@@ -193,7 +193,7 @@ const BookingDetails = () => {
 
             {/* Uncomment for confirm appointment modal  */}
             {/* <ConfirmAppointment /> */}
-            <ConfirmAppointmentSuccess />
+            {/* <ConfirmAppointmentSuccess /> */}
         </div>
     )
 }

@@ -15,6 +15,7 @@ import ServiceDetails from "@/pages/services/ServiceDetails";
 import Bookings from "@/pages/bookings/Bookings";
 import BookingDetails from "@/pages/bookings/BookingDetails";
 import Wallet from "../pages/wallet/Wallet";
+import Inbox from "@/pages/inbox/Inbox";
 
 const AppRoutes = () => {
   return (
@@ -43,6 +44,7 @@ const AppRoutes = () => {
         <Route path="bookings" element={<Bookings />} />
         <Route path="bookings/booking" element={<BookingDetails />} />
         <Route path="wallet" element={<Wallet />} />
+        <Route path="inbox" element={<Inbox />} />
       </Route>
     </Routes>
   );
