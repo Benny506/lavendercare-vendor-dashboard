@@ -16,6 +16,11 @@ import Bookings from "@/pages/bookings/Bookings";
 import BookingDetails from "@/pages/bookings/BookingDetails";
 import Wallet from "../pages/wallet/Wallet";
 import Inbox from "@/pages/inbox/Inbox";
+import SettingsLayout from "@/layouts/SettingsLayout";
+import BusinessProfile from "@/pages/settings/BusinessProfile";
+import BankAccounts from "@/pages/settings/BankAccounts";
+import ChangePassword from "@/pages/settings/ChangePassword";
+import Notifications from "@/pages/notifications/Notifications";
 
 const AppRoutes = () => {
   return (
@@ -45,6 +50,15 @@ const AppRoutes = () => {
         <Route path="bookings/booking" element={<BookingDetails />} />
         <Route path="wallet" element={<Wallet />} />
         <Route path="inbox" element={<Inbox />} />
+
+        <Route path="settings" element={<SettingsLayout />}>
+          <Route index element={<BusinessProfile />} />
+          <Route path="business-profile" element={<BusinessProfile />} />
+          <Route path="bank-accounts" element={<BankAccounts />} />
+          <Route path="change-password" element={<ChangePassword />} />
+        </Route>
+
+        <Route path="notifications" element={<Notifications />} />
       </Route>
     </Routes>
   );
