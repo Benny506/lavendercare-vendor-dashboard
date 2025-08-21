@@ -10,6 +10,7 @@ const CancelAppointment = () => {
             primaryButton='Yes, Cancel'
             secondaryButton='No, Go back'
             styles={{
+                image: "mt-10",
                 description: "text-center text-grey-500 mt-2 mb-20",
                 footer: "flex flex-col gap-3 mt-6 w-full",
                 primaryButton: "w-full px-5 py-3 bg-error-500 text-grey-50 rounded-4xl font-semibold mb-1",

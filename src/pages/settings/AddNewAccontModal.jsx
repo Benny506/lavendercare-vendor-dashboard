@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@iconify/react";
 
-export default function AddNewAccountModal({ onClose }) {
+export default function AddNewAccountModal(/*{ onClose }*/) {
     const [isOpen, setIsOpen] = useState(true);
 
     return (

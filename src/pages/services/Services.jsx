@@ -13,13 +13,18 @@ import { Badge } from "@/components/ui/badge";
 import { Icon } from "@iconify/react";
 import { services, servicesData } from "@/constants/constant";
 import FinishSettingUp from "./FinishSettingUp";
+import AddServiceModal from "./modals/AddServiceModal";
+import SetPricing from "./modals/SetPricing";
+import SetAvailability from "./modals/SetAvailability";
+import ConfirmDetails from "./modals/ConfirmDetails";
+import ReviewInProgress from "./modals/ReviewInProgress";
 
-const statusColorMap = {
+/* const statusColorMap = {
     active: "bg-green-600 text-green-600",
     pending: "bg-orange-500 text-orange-500",
     rejected: "bg-red-600 text-red-600",
     hidden: "bg-gray-500 text-gray-500",
-};
+}; */
 
 export default function Services() {
     const [filter, setFilter] = useState("all");
@@ -171,6 +176,11 @@ export default function Services() {
 
             {/* Uncomment for finish setting up modal  */}
             {/* <FinishSettingUp /> */}
+            {/* <AddServiceModal /> */}
+            {/* <SetPricing /> */}
+            {/* <SetAvailability /> */}
+            {/* <ConfirmDetails /> */}
+            {/* <ReviewInProgress /> */}
         </div >
     );
 }

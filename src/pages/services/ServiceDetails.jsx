@@ -7,6 +7,10 @@ import ShowService from "./ShowService";
 import HideService from "./HideService";
 import ShowServiceSuccess from "./ShowServiceSuccess";
 import HideServiceSuccess from "./HideServiceSuccess";
+import ConfirmChanges from "./modals/ConfirmChanges";
+import ConfirmChangesProgress from "./modals/ConfirmChangesProgress";
+import CancelChanges from "./modals/CancelChanges";
+import CancelChangesSuccess from "./modals/CancelChangesSuccess";
 
 export default function ServiceDetails() {
   return (
@@ -28,6 +32,13 @@ export default function ServiceDetails() {
           <Icon icon="mdi:edit-outline" width="30" height="30" />
           Edit Availability
         </Button>
+
+        {/* Edit Availabity Modals  */}
+        {/* <ConfirmChanges /> */}
+        {/* <ConfirmChangesProgress /> */}
+
+        {/* <CancelChanges /> */}
+        {/* <CancelChangesSuccess /> */}
       </div>
 
       <div className="flex flex-col gap-2">
