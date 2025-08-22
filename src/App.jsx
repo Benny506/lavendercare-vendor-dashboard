@@ -1,8 +1,8 @@
-import React from 'react'
+import AppRoutes from './routes/Routes'
 
 const App = () => {
   return (
-    <div className='bg-success-400 text-error-400'>App</div>
+    <AppRoutes />
   )
 }
 
