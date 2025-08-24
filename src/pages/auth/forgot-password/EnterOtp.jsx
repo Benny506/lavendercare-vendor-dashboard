@@ -8,7 +8,7 @@ export default function EnterOtp() {
         <div>
             <button 
                 type="button" 
-                className="absolute top-20 left-20 z-50 flex items-center gap-2 cursor-pointer text-primary-600"
+                className="absolute top-16 md:top-20 left-4 md:left-20 z-50 flex items-center gap-2 cursor-pointer text-primary-600"
                 onClick={() => navigate(-1)}
             >
                 <span className="text-2xl">
@@ -39,7 +39,7 @@ export default function EnterOtp() {
                                         <input
                                             key={index}
                                             type="text"
-                                            className="w-12 h-12 text-center border border-gray-300 rounded-lg text-lg bg-gray-50 focus:outline-none"
+                                            className="w-11 md:w-12 h-12 text-center border border-gray-300 rounded-lg text-lg bg-gray-50 focus:outline-none"
                                             maxLength={1}
                                         />
                                     ))}
@@ -56,7 +56,7 @@ export default function EnterOtp() {
                 footerLink="/recover-password"
                 footerLinkText="Change Email"
                 styles={{
-                    wrapper: "max-w-sm mx-auto p-6",
+                    wrapper: "max-w-sm mx-auto p-2 md:p-6",
                     title: "text-xl font-bold text-center text-gray-800",
                     description: "text-gray-500 text-center",
                     button: "w-full bg-primary-500 text-grey-50 text-base py-6 rounded-full font-bold mt-2",

@@ -11,24 +11,26 @@ import ConfirmChanges from "./modals/ConfirmChanges";
 import ConfirmChangesProgress from "./modals/ConfirmChangesProgress";
 import CancelChanges from "./modals/CancelChanges";
 import CancelChangesSuccess from "./modals/CancelChangesSuccess";
+import { useNavigate } from "react-router-dom";
 
 export default function ServiceDetails() {
+  const navigate = useNavigate()
   return (
-    <div className="w-full p-6 min-h-screen">
+    <div className="w-full py-4 md:py-6 px-0 md:px-6 min-h-screen">
       {/* Back Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 md:gap-0 mb-4 md:mb-0">
         <button
           type="button"
-          className="flex items-center gap-2 mb-6 text-primary-600 cursor-pointer"
+          className="flex items-center md:gap-2 md:mb-6 text-primary-600 cursor-pointer"
           onClick={() => navigate(-1)}
         >
           <span className="text-2xl">
             <Icon icon="ph:arrow-left" />
           </span>
-          <span className="font-semibold text-lg">Back to Services</span>
+          <span className="font-semibold md:text-lg text-sm">Back to Services</span>
         </button>
 
-        <Button className="bg-success-500 rounded-4xl py-6 px-5 text-white">
+        <Button className="bg-success-500 rounded-4xl  md:py-6 md:px-5 text-white">
           <Icon icon="mdi:edit-outline" width="30" height="30" />
           Edit Availability
         </Button>
@@ -65,15 +67,15 @@ export default function ServiceDetails() {
       <div className="bg-white rounded-lg p-4 shadow mb-6">
         <h3 className="text-xl font-bold text-grey-700 mb-3">Pricing</h3>
 
-        <div className="flex item-ceter justify-between bg-grey-100 rounded-2xl p-4">
-          <div className="flex items-center gap-5">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-grey-100 rounded-2xl gap-2 p-4">
+          <div className="flex flex-wrap md:items-center gap-3 md:gap-5">
             <span>Type : <Badge className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">Fixed</Badge></span>
-            <div>|</div>
+            <div className="hidden md:block">|</div>
             <span>Price/Session: <strong>₦1200</strong></span>
-            <div>|</div>
+            <div className="hidden md:block">|</div>
             <span>Session Duration: <strong>2hrs</strong></span>
           </div>
-          <Button variant="ghost" className="text-primary-500">
+          <Button variant="ghost" className="text-primary-500 -ml-4 md:-ml-0">
             <Icon icon="mdi:edit-outline" width="30" height="30" />Edit Pricing
           </Button>
         </div>
@@ -100,7 +102,7 @@ export default function ServiceDetails() {
           <span className="font-normal">(12 Reviews)</span>
         </div>
 
-        <div className="text-gray-600 flex gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4 my-2">
+        <div className="text-gray-600 flex flex-col md:flex-row gap-4 md:gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4 my-2">
 
           {/* Select Filter */}
           <div className="flex gap-2 items-center">

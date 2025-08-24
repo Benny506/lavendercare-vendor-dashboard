@@ -8,7 +8,7 @@ const SettingsLayout = () => {
     ];
 
     return (
-        <div className="w-full mx-auto p-6">
+        <div className="w-full mx-auto p-6 px-0">
             {/* Tabs */}
             <div className="flex gap-6 border-b border-grey-200 mb-6">
                 {tabs.map((tab) => (

@@ -63,7 +63,7 @@ const Wallet = () => {
     }
 
     return (
-        <div className="p-4 space-y-6">
+        <div className="py-4 md:p-4 space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 mb-6">
                 {walletInfo.map((info, index) => {
@@ -97,8 +97,8 @@ const Wallet = () => {
 
             {/* Withdrawal History Header */}
             <div className="bg-white rounded-2xl border">
-                <div className="w-full flex items-center justify-between p-6 border-b-1">
-                    <div className='flex items-center justify-between gap-4'>
+                <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0 p-3 md:p-6 border-b-1">
+                    <div className='flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
                         <div className="flex flex-col gap-1">
                             <h2 className="font-bold text-lg text-gray-900 flex items-center gap-2">
                                 Withdrawal History
@@ -108,8 +108,8 @@ const Wallet = () => {
 
                         <div>
                             <Select>
-                                <SelectTrigger className="flex items-center border border-gray-200 rounded-md px-4 py-3 bg-white text-gray-700 text-sm font-medium">
-                                    <Icon icon="uil:calender" className="mr-2 text-lg text-gray-400" />
+                                <SelectTrigger className="flex items-center border border-gray-200 rounded-md md:px-4 py-3 bg-white text-gray-700 text-sm font-medium">
+                                    <Icon icon="uil:calender" className="md:mr-2 text-lg text-gray-400" />
                                     <SelectValue placeholder="January 01, 2023 - July 20, 2023" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -134,13 +134,14 @@ const Wallet = () => {
                     data={filteredTransactions}
                     pagination={
                         <Pagination
+                            className="gap-16 md:gap-0"
                             currentPage={currentPage}
                             totalPages={totalPages}
                             onPageChange={handlePageChange}
                         />
                     }
                     styles={{
-                        wrapper: "p-3 overflow-x-auto",
+                        wrapper: "md:p-3 overflow-x-auto max-w-2xs md:max-w-full",
                         table: "w-full border-collapse",
                         headerRow: "bg-grey-50 text-left text-gray-700 text-sm border-b border-grey-100",
                         headerCell: "p-4 font-semibold",

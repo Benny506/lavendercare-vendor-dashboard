@@ -35,10 +35,10 @@ export default function Services() {
             : services.filter((s) => s.status === filter);
 
     return (
-        <div className="flex flex-col gap-6 p-6 w-full">
+        <div className="flex flex-col gap-6 py-6 px-0 md:py-6 md:px-6 w-full">
             {/* Top Summary Boxes */}
-            <div className="grid grid-cols-2">
-                <div className=" bg-grey-50 rounded-l-sm p-4 flex flex-col justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-0">
+                <div className=" bg-grey-50 rounded-sm md:rounded-l-sm p-4 flex flex-col justify-between">
                     <div className=" w-full flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <Icon icon="weui:setting-outlined" width="24" height="24" className=" text-success-500" />
@@ -52,7 +52,7 @@ export default function Services() {
                         <div className="w-3 h-1 my-6 bg-black"></div>
                     )}
                 </div>
-                <div className="bg-primary-50 rounded-r-sm p-4 flex flex-col justify-between">
+                <div className="bg-primary-50 rounded-sm md:rounded-r-sm p-4 flex flex-col justify-between">
                     <div className=" w-full flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <Icon icon="weui:setting-outlined" width="24" height="24" className=" text-error-500" />
@@ -71,9 +71,9 @@ export default function Services() {
 
             <div className="bg-white rounded-2xl border">
                 {/* Search and Filter */}
-                <div className="w-full flex items-center justify-between gap-4 p-4 pb-1 border-b-1">
+                <div className="w-full flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-4 pb-4 lg:pb-1 border-b-1">
 
-                    <div className="flex justify-between items-center mb-3 p-2">
+                    <div className="flex justify-between items-center lg:mb-3 p-2">
                         <div className="flex flex-col gap-1">
                             <h2 className="font-bold text-xl text-gray-900">All Services</h2>
                             <p className="text-xs text-gray-400">
@@ -82,10 +82,10 @@ export default function Services() {
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-warp gap-2">
                         <div className="relative">
                             {/* <Icon icon="iconamoon:search" width="24" height="24" className="absolute text-red-50 left-2 top-2" /> */}
-                            <Input placeholder="Search services" className="w-full min-w-sm py-5" />
+                            <Input placeholder="Search services" className="w-full md:min-w-sm py-5" />
                         </div>
 
 
@@ -116,7 +116,7 @@ export default function Services() {
 
                 {/* Service Cards */}
                 {services && services.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-4 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
                         {filteredServices.map((service) => (
                             <div
                                 key={service.id}
@@ -138,7 +138,7 @@ export default function Services() {
                                     Fixed Price: {service.price}
                                 </p>
 
-                                <div className="flex gap-2">
+                                <div className="flex flex-col md:flex-row gap-4 md:gap-2">
                                     <Switch checked={service.status === "active"} />
                                     <div className="flex flex-1 items-center justify-between">
                                         <div>
