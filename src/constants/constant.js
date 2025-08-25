@@ -1,10 +1,30 @@
+export const serviceStatuses = [
+  'pending', 'active', 'hidden', 'rejected'
+]
+
+export const bookingStatuses = [
+  'upcoming', 'ongoing', 'attended', 'cancelled', 'missed'
+]
+
+export const vendorServicesOptions = [
+  "Medical And Clinical Care",
+  "Wellness And Therapy",
+  "Baby Care Services",
+  "Fitness And Recovery",
+  "Home And Lifestyle Support",
+  "Education And Coaching",
+  "Products And Essentials"
+]
+
+export const currencies = ['NGN']
+
 // Sidebar list 
 export const SidebarItems = [
-  { label: 'Dashboard', icon: 'material-symbols:dashboard-outline', active: true },
-  { label: 'Services', icon: 'material-symbols:work-outline' },
-  { label: 'Bookings', icon: 'uil:calender' },
-  { label: 'Inbox', icon: 'ic:outline-message' },
-  { label: 'Wallet', icon: 'ic:outline-account-balance-wallet' },
+  { label: 'Dashboard', icon: 'material-symbols:dashboard-outline', path: '/' },
+  { label: 'Services', icon: 'material-symbols:work-outline', path: '/services' },
+  { label: 'Bookings', icon: 'uil:calender', path: "/bookings" },
+  { label: 'Inbox', icon: 'ic:outline-message', path: "/inbox" },
+  { label: 'Wallet', icon: 'ic:outline-account-balance-wallet', path: "wallet" },
 ];
 
 // Dashboard Data 

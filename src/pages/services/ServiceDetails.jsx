@@ -11,8 +11,188 @@ import ConfirmChanges from "./modals/ConfirmChanges";
 import ConfirmChangesProgress from "./modals/ConfirmChangesProgress";
 import CancelChanges from "./modals/CancelChanges";
 import CancelChangesSuccess from "./modals/CancelChangesSuccess";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getServiceStatusColor, getServiceStatusFeedBack } from "@/lib/utilsJsx";
+import { formatNumberWithCommas } from "@/lib/utils";
+import SetPricing from "./modals/SetPricing";
+import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
+import supabase from "@/database/dbInit";
+import { getUserDetailsState, setUserDetails } from "@/redux/slices/userDetailsSlice";
+import SetServiceDetails from "./modals/SetServiceDetails";
+import SetAvailability from "./modals/SetAvailability";
 
 export default function ServiceDetails() {
+  const dispatch = useDispatch()
+
+  const navigate = useNavigate()
+
+  const { state } = useLocation()
+
+  const service_id = state?.service_id
+
+  const profile = useSelector(state => getUserDetailsState(state).profile)
+  const services = useSelector(state => getUserDetailsState(state).services)
+
+  const [editModals, setEditModals] = useState({
+    type: null,
+  })
+  const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
+  const [service, setService] = useState()
+
+  useEffect(() => {
+    if(!service_id){
+      navigate('/services')
+    }
+
+    const s = (services || []).filter(s => s?.id === service_id)[0]
+    
+    if(!s){
+      toast.info("Unable to find service")
+    
+    } else{
+      setService(s)
+    }
+  }, [service_id, services])
+
+  useEffect(() => {
+    const { isLoading, data } = apiReqs
+
+    if(isLoading) dispatch(appLoadStart());
+    else dispatch(appLoadStop())
+
+    if(isLoading && data){
+      const { type, requestInfo } = data
+
+      if(type == 'editService'){
+        editService({ requestInfo })
+      }
+    }
+  }, [apiReqs])
+
+  const editService = async ({ requestInfo }) => {
+    try {
+
+      const { data, error } = await supabase
+        .from('vendor_services')
+        .update(requestInfo)
+        .eq('id', service_id)
+        .select()
+        .single()
+
+      if(error){
+        console.log(error)
+        throw new Error()
+      }
+
+      const updatedServices = (services || []).map(s => {
+        if(s.id === id){
+          return {
+            ...s,
+            ...requestInfo
+          }
+        }
+
+        return s
+      })
+
+      dispatch(setUserDetails({ services: updatedServices }))
+
+      setApiReqs({ isLoading: false, errorMsg: null, data: null })
+
+      toast.success("Service editted")
+
+      return
+
+      
+    } catch (error) {
+      console.log(error)
+      return editServiceFailure({ errorMsg: 'Something went wrong! Try again' })
+    }
+  }
+  const editServiceFailure = ({ errorMsg }) => {
+    setApiReqs({ isLoading: false, errorMsg, data: null })
+    toast.error(errorMsg)
+
+    return
+  }
+
+  if(!service) return <></>
+
+  const { id, service_name, availability, pricing_type, currency, amount,
+    status, service_category, service_details
+   } = service
+
+
+  const updateAvailability = (availability) => {
+    if(!availability){
+      toast.info("Not all fields are set")
+      return
+    }
+
+    setApiReqs({
+      isLoading: true,
+      errorMsg: null,
+      data: {
+        type: 'editService',
+        requestInfo: {
+          availability
+        }
+      }
+    })    
+  }
+
+  const updateServiceDetails = ({ service_details }) => {
+    if(!service_details){
+      toast.info("Not all fields are set")
+      return
+    }
+
+    setApiReqs({
+      isLoading: true,
+      errorMsg: null,
+      data: {
+        type: 'editService',
+        requestInfo: {
+          service_details
+        }
+      }
+    })
+  }
+
+  const updatePricing = ({ currency, pricing_type, amount }) => {
+    if(!currency || !pricing_type || !amount){
+      toast.info("Not all fields are set")
+      return
+    }
+
+    if(
+      currency === service?.currency
+      &&
+      pricing_type === service?.pricing_type
+      &&
+      amount === service?.amount
+    ){
+      toast.info("No changes found")
+      return;
+    }
+
+    setApiReqs({
+      isLoading: true,
+      errorMsg: null,
+      data: {
+        type: 'editService',
+        requestInfo: {
+          currency, pricing_type, amount
+        }
+      }
+    })
+
+    return;
+  }
+
   return (
     <div className="w-full p-6 min-h-screen">
       {/* Back Button */}
@@ -20,7 +200,7 @@ export default function ServiceDetails() {
         <button
           type="button"
           className="flex items-center gap-2 mb-6 text-primary-600 cursor-pointer"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/services')}
         >
           <span className="text-2xl">
             <Icon icon="ph:arrow-left" />
@@ -28,7 +208,7 @@ export default function ServiceDetails() {
           <span className="font-semibold text-lg">Back to Services</span>
         </button>
 
-        <Button className="bg-success-500 rounded-4xl py-6 px-5 text-white">
+        <Button onClick={() => setEditModals({ type: 'availability' })} className="bg-success-500 rounded-4xl py-6 px-5 text-white">
           <Icon icon="mdi:edit-outline" width="30" height="30" />
           Edit Availability
         </Button>
@@ -42,22 +222,22 @@ export default function ServiceDetails() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-xl font-bold text-grey-700">Massage therapy</h2>
+        <h2 className="text-xl font-bold text-grey-700"> { service_name } </h2>
         <div className="flex gap-2">
-          <Badge variant="secondary" className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">Self Care</Badge>
-          <Badge variant="secondary" className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">Massage</Badge>
+          <Badge variant="secondary" className="text-xs border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3 capitalize"> { service_category?.replaceAll("_", " ") } </Badge>
         </div>
       </div>
 
-      <div className="flex gap-4 my-6 bg-error-50 w-full p-4 rounded-2xl">
-        <div className="flex items-center">
-          <Switch checked className="" />
-        </div>
-        <div className="flex flex-col justify-between text-grey-600">
+      <div 
+        className={`flex gap-4 my-6 w-full p-4 rounded-2xl ${getServiceStatusColor({ status })}`}
+      >
+        <div className="flex flex-col justify-between">
           <p className="text-md font-bold">
-            Hidden
+            { status }
           </p>
-          <p className="text-sm">Prospective clients can not see this service</p>
+          <p className="text-sm">
+            {getServiceStatusFeedBack({ status })}
+          </p>
         </div>
       </div>
 
@@ -67,13 +247,13 @@ export default function ServiceDetails() {
 
         <div className="flex item-ceter justify-between bg-grey-100 rounded-2xl p-4">
           <div className="flex items-center gap-5">
-            <span>Type : <Badge className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">Fixed</Badge></span>
+            <span>Type : <Badge className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">{pricing_type}</Badge></span>
             <div>|</div>
-            <span>Price/Session: <strong>₦1200</strong></span>
+            <span>Price/Session: <strong> {formatNumberWithCommas(amount)} </strong></span>
             <div>|</div>
-            <span>Session Duration: <strong>2hrs</strong></span>
+            <span>Currency: <strong> {currency} </strong></span>
           </div>
-          <Button variant="ghost" className="text-primary-500">
+          <Button onClick={() => setEditModals({ type: 'pricing' })} variant="ghost" className="text-primary-500">
             <Icon icon="mdi:edit-outline" width="30" height="30" />Edit Pricing
           </Button>
         </div>
@@ -83,13 +263,13 @@ export default function ServiceDetails() {
       <div className="bg-white rounded-lg p-4 shadow mb-6">
         <div className="flex justify-between mb-2 items-center">
           <h3 className="text-xl font-bold text-grey-700 mb-3">Details</h3>
-          <Button variant="ghost" className="text-primary-500">
+          <Button onClick={() => setEditModals({ type: 'service_details' })} variant="ghost" className="text-primary-500">
             <Icon icon="mdi:edit-outline" width="30" height="30" />Edit Details
           </Button>
         </div>
+        
         <ul className="list-disc list-inside text-gray-600 flex flex-col gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4">
-          <li>Deep tissue massage. We will punch you until you feel better. You may/may not see your ancestors.</li>
-          <li>Slap your neck plenty times</li>
+          { service_details }
         </ul>
       </div>
 
@@ -175,6 +355,37 @@ export default function ServiceDetails() {
       {/* Uncomment for service modal  */}
       {/* <HideService /> */}
       {/* <HideServiceSuccess /> */}
+
+      <SetPricing 
+          info={{
+            currency, amount, pricing_type
+          }} 
+          goBackAStep={() => setEditModals({ type: null })}
+          isOpen={editModals.type == 'pricing'}
+          hide={() => setEditModals({ type: null })}
+          handleContinueBtnClick={updatePricing}  
+          continueBtnText="Save"              
+      /> 
+      <SetServiceDetails 
+          info={{
+            service_details
+          }} 
+          goBackAStep={() => setEditModals({ type: null })}
+          isOpen={editModals.type == 'service_details'}
+          hide={() => setEditModals({ type: null })}
+          handleContinueBtnClick={updateServiceDetails}  
+          continueBtnText="Save"              
+      />
+      <SetAvailability
+          info={{
+            ...availability
+          }} 
+          isOpen={editModals.type == 'availability'}
+          hide={() => setEditModals({ type: null })}
+          goBackAStep={() => setEditModals({ type: null })}        
+          handleContinueBtnClick={updateAvailability}   
+          continueBtnText="Save"                   
+      />                  
     </div>
   );
 }

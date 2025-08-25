@@ -1,47 +1,93 @@
-import { bookingsInfo, bookingsTableData } from "@/constants/constant";
+import { bookingsInfo, bookingsTableData, bookingStatuses } from "@/constants/constant";
 import { Icon } from "@iconify/react";
 import Table from "@/components/Table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Pagination from "@/components/Pagination";
 import CancelAppointment from "./CancelAppointment";
 import ConfirmAppointmentSuccess from "./ConfirmAppointmentSuccess";
 import ConfirmAppointment from "./ConfirmAppointment";
 import CancelAppointmentSuccess from "./CancelAppointmentSuccess";
+import { bookingsMap, getBookingStatusBadge, getServiceStatusBadge } from "@/lib/utilsJsx";
+import { useSelector } from "react-redux";
+import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
+import { usePagination } from "@/hooks/usePagination";
+import { useNavigate } from "react-router-dom";
 
 const Bookings = () => {
+
+    const navigate = useNavigate()
+
+    const allBookings = useSelector(state => getUserDetailsState(state).bookings)
+    const services = useSelector(state => getUserDetailsState(state).services)
+
     const [filter, setFilter] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [bookings, setBookings] = useState([])
+    const [pageListIndex, setPageListIndex] = useState(0)    
+    const [bookingsCount, setBookingsCount] = useState({
+        all: 0, total: 0, upcoming: 0, ongoing: 0, attended: 0, missed: 0, cancelled: 0
+    })
+
+    useEffect(() => {
+        const countObj = {
+            all: 0, upcoming: 0, ongoing: 0, attended: 0, missed: 0, cancelled: 0
+        }
+
+        const _b = (allBookings || []).map(b => {
+
+            const { status } = b
+
+            const prevValue = countObj[status] || 0
+
+            countObj[status] = prevValue + 1
+
+            const service = (services || []).filter(s => s?.id == b?.service_id)[0]
+            return {
+                ...b,
+                serviceInfo: service,
+                location: 'Dummy location'
+            }
+        })
+
+        countObj['all'] = _b?.length
+
+        setBookings(_b)
+
+        setBookingsCount(countObj)
+    }, allBookings, services)
 
     // Table Columns
     const columns = [
-        { key: "number", label: "Booking Number" },
-        { key: "date", label: "Booking Date" },
-        { key: "service", label: "Service Booked" },
+        { key: "id", label: "Booking Number" },
+        { key: "day", label: "Booking Date" },
+        { 
+            key: "service_name", 
+            label: "Service Booked",
+            render: (row) => (
+                <span>
+                    { row?.serviceInfo?.service_name }
+                </span>
+            ),            
+        },
         { key: "location", label: "Location" },
         {
             key: "status",
             label: "Status",
             render: (row) => (
-                <span
-                    className={`px-3 py-1 text-xs rounded-2xl font-medium
-          ${row.status === "Ongoing" && "bg-success-50 text-success-500"}
-          ${row.status === "Upcoming" && "bg-warning-50 text-warning-700"}
-          ${row.status === "Attended" && "bg-primary-50 text-primary-700"}
-          ${row.status === "Cancelled" && "bg-grey-100 text-grey-700"}
-          ${row.status === "Missed" && "bg-error-50 text-error-700"}`}
-                >
-                    {row.status}
-                </span>
+                getBookingStatusBadge({ status: row?.status })
             ),
         },
         {
             key: "action",
             label: "Action",
             render: (row) => (
-                <button className="px-4 py-1 text-sm bg-primary-500 text-grey-50 rounded-4xl">
+                <button 
+                    onClick={() => navigate('/bookings/booking', { state: { booking_id: row?.id } })}
+                    className="cursor-pointer px-4 py-1 text-sm bg-primary-500 text-grey-50 rounded-4xl"
+                >
                     View
                 </button>
             ),
@@ -49,38 +95,88 @@ const Bookings = () => {
     ];
 
     // ✅ Filter & Search
-    const filteredData = bookingsTableData.filter(
-        (item) =>
-            (filter === "All" || item.status === filter) &&
-            (item.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.service.toLowerCase().includes(searchTerm.toLowerCase()))
+    const filteredData = bookings.filter(
+        (item) => {
+
+            const { id, serviceInfo } = item
+
+            const { service_name } = serviceInfo
+
+            const matchSearch = 
+                (searchTerm.toLowerCase().includes(service_name?.toLowerCase())
+                ||
+                service_name.toLowerCase().includes(searchTerm?.toLowerCase()))
+
+                ||
+
+                (searchTerm.toLowerCase().includes(id?.toLowerCase())
+                ||
+                id.toLowerCase().includes(searchTerm?.toLowerCase()))
+
+            const matchesFilter = (filter?.toLowerCase() === "all" || item.status === filter)
+
+            return matchesFilter && matchSearch
+        }
     );
 
-    const totalPages = 10;
+    const { pageItems, pageList, totalPageListIndex } = usePagination({
+        arr: filteredData,
+        maxShow: 4,
+        index: currentPage,
+        maxPage: 5,
+        pageListIndex
+    });
 
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
+    const incrementPageListIndex = () => {
+        if(pageListIndex === totalPageListIndex){
+            setPageListIndex(0)
+         
+        } else{
+            setPageListIndex(prev => prev+1)
+        }
+
+        return
+    }
+
+    const decrementPageListIndex = () => {
+        if(pageListIndex == 0){
+            setPageListIndex(totalPageListIndex)
+        
+        } else{
+            setPageListIndex(prev => prev-1)
+        }
+
+        return
+    }    
 
     return (
         <div className="mt-4">
             {/* ✅ Summary Boxes */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-                {bookingsInfo.map((info, index) => {
-                    const [bgColor, iconColor] = info.color.split(" ");
+                {Object.keys(bookingsCount).map((status, index) => {
+
+                    const iconColor = bookingsMap[status]?.color
+
+                    const count = bookingsCount[status]
+
+                    const isActive = filter.toLowerCase() === status?.toLowerCase()
+
                     return (
                         <div
                             key={index}
-                            className={`p-6 rounded-lg flex items-center justify-between ${bgColor}`}
+                            onClick={() => setFilter(status)}
+                            className={`p-6 cursor-pointer rounded-lg flex items-center justify-between ${isActive ? 'bg-white' : 'bg-primary-50'}`}
                         >
                             <div className="flex flex-col gap-3">
                                 <div className="flex gap-2 items-center">
-                                    {info.icon && (
-                                        <Icon icon={info.icon} className={`text-xl ${iconColor}`} />
-                                    )}
-                                    <p className="text-sm text-grey-600">{info.title}</p>
+                                    {
+                                        status != 'all'
+                                        &&
+                                            <Icon icon={'uil:calender'} className={`text-xl ${iconColor}`} />
+                                    }
+                                    <p className="text-sm text-grey-600 capitalize">{status}</p>
                                 </div>
-                                <h2 className="text-2xl font-bold text-gray-900">{info.value}</h2>
+                                <h2 className="text-2xl font-bold text-gray-900">{count}</h2>
                             </div>
                         </div>
                     );
@@ -106,26 +202,26 @@ const Bookings = () => {
                         />
 
                         {/* Filter Dropdown */}
-                        <Select onValueChange={setFilter} defaultValue="All">
+                        {/* <Select onValueChange={setFilter} defaultValue="All">
                             <SelectTrigger className="py-5">
                                 <SelectValue placeholder="Filter by: All" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="All">All</SelectItem>
-                                <SelectItem value="Upcoming">Upcoming</SelectItem>
-                                <SelectItem value="Ongoing">Ongoing</SelectItem>
-                                <SelectItem value="Attended">Attended</SelectItem>
-                                <SelectItem value="Cancelled">Cancelled</SelectItem>
-                                <SelectItem value="Missed">Missed</SelectItem>
+                                {
+                                    bookingStatuses.map(s => (
+                                        <SelectItem value={s} className={'capitalize'}> { s } </SelectItem>
+                                    ))
+                                }
                             </SelectContent>
-                        </Select>
+                        </Select> */}
                     </div>
                 </div>
 
                 {/* Table */}
                 <Table
                     columns={columns}
-                    data={filteredData}
+                    data={pageItems}
                     styles={{
                         wrapper: "p-3 overflow-x-auto",
                         table: "w-full border-collapse -mt-3",
@@ -140,11 +236,75 @@ const Bookings = () => {
                         emptyIcon: "uil:schedule"
                     }}
                     pagination={
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                        />
+                        <>
+                            {
+                                pageItems.length > 0
+                                &&
+                                    <div className="mt-6 flex items-center justify-between">
+                                        <button 
+                                            disabled={pageListIndex > 0 ? false : true}
+                                            onClick={decrementPageListIndex} 
+                                            style={{
+                                                opacity: pageListIndex > 0 ? 1 : 0.5
+                                            }}
+                                            className="cursor-not-allowed flex items-center text-gray-600 hover:text-gray-800 font-bold"
+                                        >
+                                            <Icon icon="mdi:arrow-left" className="mr-2" /> 
+                                            <span className="hidden md:inline">Previous</span>
+                                        </button>                        
+
+                                        <div className="flex flex-wrap justify-center gap-2">
+                                            {pageList?.map((p, i) => {
+
+                                                const isActivePAge = p-1 === currentPage
+
+                                                const handlePClick = () => {
+                                                    if (p === '...'){
+                                                        
+                                                        if(i == 0){
+                                                            decrementPageListIndex()
+                                                        
+                                                        } else{
+                                                            incrementPageListIndex()
+                                                        }
+
+                                                        return;
+                                                    }
+
+                                                    setCurrentPage(p-1)
+
+                                                    return;
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={i}
+                                                        onClick={handlePClick}
+                                                        className={`w-8 h-8 cursor-pointer rounded-full ${isActivePAge ? "bg-primary-100 text-primary-600" : "text-gray-600"} flex items-center justify-center`}
+                                                    >
+                                                        {p}
+                                                    </button>
+                                                )}
+                                            )}
+                                        </div>
+                                        <button 
+                                            disabled={pageListIndex < totalPageListIndex ? false : true}
+                                            onClick={incrementPageListIndex} 
+                                            style={{
+                                                opacity: pageListIndex < totalPageListIndex ? 1 : 0.5
+                                            }}
+                                            className="cursor-pointer flex items-center text-gray-600 hover:text-gray-800 font-bold"
+                                        >
+                                            <span className="hidden md:inline">Next</span> <Icon icon="mdi:arrow-right" className="ml-2" />
+                                        </button>                        
+                                    </div>                    
+                            }
+                        </>                        
+                        // <Pagination
+                        //     currentPage={currentPage}
+                        //     totalPages={totalPages}
+                        //     onPageChange={handlePageChange}
+                        // />
                     }
                 />
             </div>

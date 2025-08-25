@@ -1,13 +1,120 @@
 import Modal from '@/components/Modal'
+import supabase from '@/database/dbInit'
+import { appLoadStart, appLoadStop } from '@/redux/slices/appLoadingSlice'
+import { getUserDetailsState } from '@/redux/slices/userDetailsSlice'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 
-const ConfirmDetails = () => {
+const ConfirmDetails = ({ 
+  isOpen, 
+  hide,
+  goBackAStep,
+  info,
+  handleContinueBtnClick
+}) => {
+
+  const dispatch = useDispatch()
+
+  const profile = useSelector(state => getUserDetailsState(state).profile)
+
+  const [apiReqs, setApiReqs] = useState({ isLoading: false, data: null, errorMsg: null })
+
+  useEffect(() => {
+    const { isLoading, data } = apiReqs
+
+    if(isLoading) dispatch(appLoadStart());
+    else dispatch(appLoadStop());
+
+    if(isLoading && data){
+      const { type, requestInfo } = data
+
+      if(type == 'createService'){
+        createService({ requestInfo })
+      }
+    }
+  }, [apiReqs])
+
+  const createService = async ({ requestInfo }) => {
+    try {
+
+      const { data, error } = await supabase
+        .from('vendor_services')
+        .insert({
+          ...requestInfo,
+          vendor_id: profile?.id
+        })
+        .select()
+        .single()
+
+      if(error){
+        console.log(error)
+        throw new Error()
+      }
+
+      setApiReqs({ isLoading: false, data: null, errorMsg: null })
+
+      dispatch(appLoadStop())
+
+      handleContinueBtnClick()
+
+      toast.success("Service added")
+      
+    } catch (error) {
+      console.log(error)
+      return createServiceFailure({ errorMsg: 'Something went wrong! Try again' })
+    }
+  }
+  const createServiceFailure = ({ errorMsg }) => {
+    setApiReqs({ isLoading: false, errorMsg, data: null })
+    toast.error(errorMsg)
+
+    return;
+  }
+
+  if(!isOpen) return <></>
+
+  const handleConfirm = () => {
+    try {
+      const { details } = info
+      const { serviceInfo, pricing, availability } = details
+
+      if(!serviceInfo || !pricing || !availability){
+        toast.error("Some fields were not field, go back and confirm")
+        return
+      }
+
+      const requestInfo = {
+        ...serviceInfo,
+        ...pricing,
+        availability
+      }
+
+      setApiReqs({ 
+        isLoading: true,
+        errorMsg: null,
+        data: {
+          type: 'createService',
+          requestInfo
+        }
+      })
+
+    } catch (error) {
+      toast.error("Uh-oh, something went wrong! Try again.")
+      return
+    }
+  }
+
   return (
     <Modal
       image="/assets/brush-square.svg"
       title="Confirm details"
       description="Ensure all your service details are complete before clicking confirm."
       primaryButton="Confirm"
+      primaryButtonFunc={handleConfirm}
+      onClose={hide}
       secondaryButton="Check details"
+      secondaryButtonFunc={goBackAStep}
       styles={{
         image: "mt-10",
         description: "text-center text-grey-500 mt-2 mb-20",

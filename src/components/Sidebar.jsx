@@ -1,13 +1,35 @@
 import { Icon } from '@iconify/react';
-import React from 'react';
+import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Image from './ui/image';
 import { SidebarItems } from '@/constants/constant';
 
 
 const Sidebar = () => {
   const Navigate = useNavigate();
+
+  const { pathname } = useLocation()
+
+  const activeNav =
+    pathname.includes('services')
+    ?
+      'services'
+    :
+    pathname.includes('bookings')
+    ?
+      'bookings'
+    :
+    pathname.includes('inbox')
+    ?
+      'inbox'
+    :
+    pathname.includes('wallet')
+    ?
+      'wallet'
+    :
+      'dashboard'
+
   return (
     <aside className="h-screen max-w-max flex flex-col bg-white border-r border-[#E9E9E9] justify-between mt-0.5">
       <div className=''>
@@ -18,24 +40,33 @@ const Sidebar = () => {
 
         {/* Navigation */}
         <nav className="flex flex-col gap-2 px-8">
-          {SidebarItems.map((item) => (
-            <div
-              key={item.label}
-              className={`flex items-center gap-4 py-3 px-4 rounded-lg cursor-pointer transition-colors ${item.active ? 'bg-[#7B3FE4] text-white' : 'text-[#2D1A4A] hover:bg-[#F3F0FA]'
-                }`}
-            >
-              <span className="w-6 h-6 flex items-center justify-center">
-                <Icon
-                  icon={item.icon}
-                  width="24"
-                  height="24"
-                  style={{ color: item.active ? "#FFFFFF" : "#000000" }}
-                />
-              </span>
-              <span className="font-medium text-md">{item.label}</span>
-            </div>
-          ))}
+          {SidebarItems.map((item) => {
+            
+            const active = activeNav === item.label.toLowerCase() ? true : false
 
+            const handleItemClick = () => {
+              item.path && Navigate(item.path)
+            }
+
+            return (
+              <div
+                key={item.label}
+                onClick={handleItemClick}
+                className={`flex items-center gap-4 py-3 px-4 rounded-lg cursor-pointer transition-colors ${active ? 'bg-[#7B3FE4] text-white' : 'text-[#2D1A4A] hover:bg-[#F3F0FA]'
+                  }`}
+              >
+                <span className="w-6 h-6 flex items-center justify-center">
+                  <Icon
+                    icon={item.icon}
+                    width="24"
+                    height="24"
+                    style={{ color: active ? "#FFFFFF" : "#000000" }}
+                  />
+                </span>
+                <span className="font-medium text-md">{item.label}</span>
+              </div>
+            )}
+          )}
         </nav>
 
         {/* Settings & Support */}

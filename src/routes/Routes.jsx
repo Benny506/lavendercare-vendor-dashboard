@@ -21,46 +21,49 @@ import BusinessProfile from "@/pages/settings/BusinessProfile";
 import BankAccounts from "@/pages/settings/BankAccounts";
 import ChangePassword from "@/pages/settings/ChangePassword";
 import Notifications from "@/pages/notifications/Notifications";
+import AutoLogin from "@/components/AutoLogin";
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        {/* Vendor Flow */}
-        <Route path="/new-vendor" element={<CreateVendorProfile />} />
-        <Route path="/new-vendor/verify-email" element={<VerifyEmail />} />
-        <Route path="/new-vendor/verification-complete" element={<VerificationComplete />} />
+    <AutoLogin>
+      <Routes>
+        <Route element={<Layout />}>
+          {/* Vendor Flow */}
+          <Route path="/new-vendor" element={<CreateVendorProfile />} />
+          <Route path="/new-vendor/verify-email" element={<VerifyEmail />} />
+          <Route path="/new-vendor/verification-complete" element={<VerificationComplete />} />
 
-        {/* Login */}
-        <Route path="/login" element={<Login />} />
+          {/* Login */}
+          <Route path="/login" element={<Login />} />
 
-        {/* Forgot Password */}
-        <Route path="/recover-password" element={<RecoverPassword />} />
-        <Route path="/recover-password/otp" element={<EnterOtp />} />
-        <Route path="/recover-password/new-password" element={<CreateNewPassword />} />
-        <Route path="/recover-password/password-recovered" element={<PasswordRecovered />} />
-      </Route>
-
-      {/* Dashboard  */}
-      <Route path="/" element={<DashboardLayout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="services" element={<Services />} />
-        <Route path="services/service" element={<ServiceDetails />} />
-        <Route path="bookings" element={<Bookings />} />
-        <Route path="bookings/booking" element={<BookingDetails />} />
-        <Route path="wallet" element={<Wallet />} />
-        <Route path="inbox" element={<Inbox />} />
-
-        <Route path="settings" element={<SettingsLayout />}>
-          <Route index element={<BusinessProfile />} />
-          <Route path="business-profile" element={<BusinessProfile />} />
-          <Route path="bank-accounts" element={<BankAccounts />} />
-          <Route path="change-password" element={<ChangePassword />} />
+          {/* Forgot Password */}
+          <Route path="/recover-password" element={<RecoverPassword />} />
+          <Route path="/recover-password/otp" element={<EnterOtp />} />
+          <Route path="/recover-password/new-password" element={<CreateNewPassword />} />
+          <Route path="/recover-password/password-recovered" element={<PasswordRecovered />} />
         </Route>
 
-        <Route path="notifications" element={<Notifications />} />
-      </Route>
-    </Routes>
+        {/* Dashboard  */}
+        <Route path="/" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="services" element={<Services />} />
+          <Route path="services/service" element={<ServiceDetails />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="bookings/booking" element={<BookingDetails />} />
+          <Route path="wallet" element={<Wallet />} />
+          <Route path="inbox" element={<Inbox />} />
+
+          <Route path="settings" element={<SettingsLayout />}>
+            <Route index element={<BusinessProfile />} />
+            <Route path="business-profile" element={<BusinessProfile />} />
+            <Route path="bank-accounts" element={<BankAccounts />} />
+            <Route path="change-password" element={<ChangePassword />} />
+          </Route>
+
+          <Route path="notifications" element={<Notifications />} />
+        </Route>
+      </Routes>
+    </AutoLogin>
   );
 };
 

@@ -7,6 +7,8 @@ export default function Modal({
     description,
     children,
     primaryButton = "",
+    primaryButtonFunc=()=>{},
+    secondaryButtonFunc=()=>{},
     secondaryButton = "",
     hideFooter = false,
     width = "max-w-md",
@@ -17,7 +19,7 @@ export default function Modal({
         <div
             className={`fixed inset-0 z-50 flex items-center justify-center backdrop-brightness-50 ${styles.overlay || ""}`}
         >
-            <div className={`bg-img rounded-2xl p-4 w-full ${styles.wrapper || "max-w-md shadow-xl relative"}`}>
+            <div className={`max-h-[70-vh] h-[70vh] min-h-[70vh] overflow-y-auto bg-img rounded-2xl p-4 w-full ${styles.wrapper || "max-w-md shadow-xl relative"}`}>
                 <div className={`bg-white rounded-lg shadow-lg p-6 w-full ${width} ${styles.content || ""}`}>
                     {/* Close Icon */}
                     {onClose && (
@@ -67,6 +69,7 @@ export default function Modal({
                         <div className={`${styles.footer || "flex justify-center gap-3 mt-6"}`}>
                             {primaryButton && (
                                 <button
+                                    onClick={primaryButtonFunc}
                                     className={` cursor-pointer ${styles.primaryButton || "px-4 py-2 bg-primary-600 text-white rounded-4xl"}`}
                                 >
                                     {primaryButton}
@@ -74,6 +77,7 @@ export default function Modal({
                             )}
                             {secondaryButton && (
                                 <button
+                                    onClick={secondaryButtonFunc}
                                     className={` cursor-pointer ${styles.secondaryButton || "px-4 py-2 bg-grey-100 text-gray-600 rounded-4xl"}`}
                                 >
                                     {secondaryButton}

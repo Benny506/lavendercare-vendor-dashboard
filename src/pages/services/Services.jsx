@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,28 +11,87 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@iconify/react";
-import { services, servicesData } from "@/constants/constant";
+import { serviceStatuses } from "@/constants/constant";
 import FinishSettingUp from "./FinishSettingUp";
 import AddServiceModal from "./modals/AddServiceModal";
 import SetPricing from "./modals/SetPricing";
 import SetAvailability from "./modals/SetAvailability";
 import ConfirmDetails from "./modals/ConfirmDetails";
 import ReviewInProgress from "./modals/ReviewInProgress";
-
-/* const statusColorMap = {
-    active: "bg-green-600 text-green-600",
-    pending: "bg-orange-500 text-orange-500",
-    rejected: "bg-red-600 text-red-600",
-    hidden: "bg-gray-500 text-gray-500",
-}; */
+import { useSelector } from "react-redux";
+import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
+import { formatNumberWithCommas } from "@/lib/utils";
+import { getServiceStatusBadge } from '@/lib/utilsJsx'
+import { useNavigate } from "react-router-dom";
 
 export default function Services() {
+
+    const navigate = useNavigate()
+
     const [filter, setFilter] = useState("all");
 
-    const filteredServices =
-        filter === "all"
-            ? services
-            : services.filter((s) => s.status === filter);
+    const services = useSelector(state => getUserDetailsState(state).services)
+
+    const [newService, setNewService] = useState({
+        step: null, details: {}
+    })
+    const [serviceCount, setServiceCount] = useState({
+        active: 0, inActive: 0
+    })
+    const [searchFilter, setSearchFilter] = useState('')
+
+    useEffect(() => {
+
+        const myServices = services || []
+
+        let active = 0
+        let inActive = 0
+
+        for(let i = 0; i < myServices.length; i++){
+            if(myServices[i]){
+                const { status } = myServices[i]
+
+                if(status === 'active'){
+                    active = active + 1
+                
+                } else{
+                    inActive = inActive + 1
+                }
+            }
+        }
+
+        setServiceCount({
+            active, inActive
+        })
+    }, [services])
+
+    const filteredServices = (services || []).filter(service => {
+
+        const { 
+            service_name, 
+            service_category: category
+        } = service
+
+        const service_category = category?.replaceAll("_", " ")
+
+        const matchSearch =
+            (
+                (service_name?.toLowerCase().includes(searchFilter?.toLowerCase())
+                ||
+                searchFilter?.toLowerCase().includes(service_name?.toLowerCase()))
+
+            ||
+
+                (service_category?.toLowerCase().includes(searchFilter?.toLowerCase())
+                ||
+                searchFilter?.toLowerCase().includes(service_category?.toLowerCase()))
+            )          
+
+        const matchesTab = filter === 'all' ? true : service.status === filter
+        const matchesSearch = searchFilter ? matchSearch : true
+
+        return matchesSearch && matchesTab
+    })
 
     return (
         <div className="flex flex-col gap-6 p-6 w-full">
@@ -46,8 +105,8 @@ export default function Services() {
                         </div>
                         <Icon icon="material-symbols:info-outline-rounded" width="24" height="24" />
                     </div>
-                    {servicesData.active > 0 && servicesData.active ? (
-                        <p className="text-lg font-semibold my-5 text-grey-700">{servicesData.active}</p>
+                    {serviceCount.active > 0 && serviceCount.active ? (
+                        <p className="text-lg font-semibold my-5 text-grey-700">{serviceCount.active}</p>
                     ) : (
                         <div className="w-3 h-1 my-6 bg-black"></div>
                     )}
@@ -60,8 +119,8 @@ export default function Services() {
                         </div>
                         <Icon icon="material-symbols:info-outline-rounded" width="24" height="24" />
                     </div>
-                    {servicesData.inactive > 0 || servicesData.inactive ? (
-                        <p className="text-lg font-semibold my-5 text-grey-700">{servicesData.inactive}</p>
+                    {serviceCount.inActive > 0 || serviceCount.inActive ? (
+                        <p className="text-lg font-semibold my-5 text-grey-700">{serviceCount.inActive}</p>
                     ) : (
                         <div className="w-3 h-1 my-6 bg-black"></div>
                     )}
@@ -85,7 +144,12 @@ export default function Services() {
                     <div className="flex gap-2">
                         <div className="relative">
                             {/* <Icon icon="iconamoon:search" width="24" height="24" className="absolute text-red-50 left-2 top-2" /> */}
-                            <Input placeholder="Search services" className="w-full min-w-sm py-5" />
+                            <Input 
+                                value={searchFilter}
+                                onChange={e => setSearchFilter(e.target.value)}
+                                placeholder="Search services" 
+                                className="w-full min-w-sm py-5" 
+                            />
                         </div>
 
 
@@ -95,67 +159,93 @@ export default function Services() {
                                     <SelectValue placeholder="Filter by: All" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="rejected">Rejected</SelectItem>
-                                    <SelectItem value="hidden">Hidden</SelectItem>
+                                    <SelectItem 
+                                        value={'all'}
+                                        className={'text-capitalize'}
+                                    >
+                                        All
+                                    </SelectItem>                                    
+                                    {
+                                        serviceStatuses.map((status, i) => {
+                                            return (
+                                                <SelectItem 
+                                                    key={i}
+                                                    value={status}
+                                                    className={'text-capitalize'}
+                                                >
+                                                    { status }
+                                                </SelectItem>
+                                            )
+                                        })
+                                    }
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
-                    {services && services.length > 0 && (
-                        <Button className="text-grey-50 bg-primary-500 rounded-4xl p-5 font-bold">
-                            + Add New Service
-                        </Button>
-                    )}
-
+                    <Button 
+                        onClick={() => setNewService({ step: 'add', details: {} })}
+                        className="text-grey-50 bg-primary-500 rounded-4xl p-5 font-bold cursor-pointer"
+                    >
+                        + Add New Service
+                    </Button>
                 </div>
 
 
                 {/* Service Cards */}
-                {services && services.length > 0 ? (
+                {filteredServices && filteredServices.length > 0 ? (
                     <div className="grid grid-cols-2 gap-4 p-4">
-                        {filteredServices.map((service) => (
-                            <div
-                                key={service.id}
-                                className="bg-white border rounded-xl p-4 space-y-4"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <p className="font-semibold">{service.title}</p>
+                        {filteredServices.map((service) => {
+                            
+                            const { service_name, service_category, pricing_type,
+                                amount, status, currency
+                              } = service
+
+                            return (
+                                <div
+                                    key={service.id}
+                                    className="bg-white border rounded-xl p-4 space-y-4"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-semibold">{service_name}</p>
+
+                                        <div className="flex gap-2">
+                                            <Badge variant="outline" className='font-bold text-grey-700 bg-grey-100 border-none py-1 px-2 rounded-2xl'>
+                                                {service_category?.replaceAll("_", " ")}
+                                            </Badge>                                            
+                                        </div>
+                                    </div>
+
+                                    <p className="text-sm text-grey-700 font-medium">
+                                        {pricing_type} Price: {currency} {formatNumberWithCommas(amount)}
+                                    </p>
 
                                     <div className="flex gap-2">
-                                        {service.tags.map((tag, i) => (
-                                            <Badge key={i} variant="outline" className='font-bold text-grey-700 bg-grey-100 border-none py-1 px-2 rounded-2xl'>
-                                                {tag}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </div>
+                                        <Switch checked={status === "active"} />
+                                        <div className="flex flex-1 items-center justify-between">
+                                            <div>
+                                                {getServiceStatusBadge({ status })}
+                                                {
+                                                    (status != 'active')
+                                                    &&
+                                                        <p className="text-xs">
+                                                            Prospective clients can not see this service
+                                                        </p>                                                    
+                                                }
+                                            </div>
 
-                                <p className="text-sm text-grey-700 font-medium">
-                                    Fixed Price: {service.price}
-                                </p>
-
-                                <div className="flex gap-2">
-                                    <Switch checked={service.status === "active"} />
-                                    <div className="flex flex-1 items-center justify-between">
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">
-                                                {service.status}
-                                            </p>
-                                            <p className="text-xs">Prospective clients can not see this service</p>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer">
-                                            <p className="text-sm mt-3">View all bookings</p>
-                                            <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
+                                            <div 
+                                                onClick={() => navigate('/services/service', { state: { service_id: service?.id } })}
+                                                className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer"
+                                            >
+                                                <p className="text-sm mt-3">View</p>
+                                                <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            )}
+                        )}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-12">
@@ -166,21 +256,61 @@ export default function Services() {
                         <p className="text-sm text-gray-500">
                             You have not added any services to your LavenderCare shop
                         </p>
-
-                        <Button className="text-grey-50 bg-primary-500 rounded-4xl p-5 px-10 font-bold mt-6">
-                            + Add New Service
-                        </Button>
                     </div>
                 )}
             </div>
 
             {/* Uncomment for finish setting up modal  */}
             {/* <FinishSettingUp /> */}
-            {/* <AddServiceModal /> */}
-            {/* <SetPricing /> */}
-            {/* <SetAvailability /> */}
-            {/* <ConfirmDetails /> */}
-            {/* <ReviewInProgress /> */}
+            <AddServiceModal
+                info={newService.details.serviceInfo} 
+                isOpen={newService.step == 'add'}
+                hide={() => setNewService({ step: null, details: {} })}
+                handleContinueBtnClick={(args) => setNewService(prev => ({
+                    step: 'pricing',
+                    details: {
+                        ...prev.details,
+                        serviceInfo: args
+                    }
+                }))}
+            />
+            <SetPricing 
+                info={newService.details.pricing} 
+                isOpen={newService.step == 'pricing'}
+                hide={() => setNewService({ step: null, details: {} })}
+                goBackAStep={() => setNewService(prev => ({ ...prev, step: 'add' }))}
+                handleContinueBtnClick={(args) => setNewService(prev => ({
+                    step: 'availability',
+                    details: {
+                        ...prev.details,
+                        pricing: args
+                    }
+                }))}                
+            />
+            <SetAvailability 
+                info={newService.details.availability} 
+                isOpen={newService.step == 'availability'}  
+                hide={() => setNewService({ step: null, details: {} })}
+                goBackAStep={() => setNewService(prev => ({ ...prev, step: 'pricing' }))}          
+                handleContinueBtnClick={(args) => setNewService(prev => ({
+                    step: 'confirm',
+                    details: {
+                        ...prev.details,
+                        availability: args
+                    }
+                }))}                   
+            />
+            <ConfirmDetails 
+                info={newService}
+                isOpen={newService.step == 'confirm'}  
+                hide={() => setNewService({ step: null, details: {} })} 
+                goBackAStep={() => setNewService(prev => ({ ...prev, step: 'availability' }))}                     
+                handleContinueBtnClick={() => setNewService({ step: 'review', details: {} })}                 
+            />
+            <ReviewInProgress 
+                isOpen={newService.step == 'review'}  
+                hide={() => setNewService({ step: null, details: {} })}                             
+            />
         </div >
     );
 }

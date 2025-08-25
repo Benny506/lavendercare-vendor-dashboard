@@ -1,6 +1,90 @@
 import AuthForm from "@/components/AuthForm";
+import OtpInput from "@/components/OtpInput";
+import { onRequestApi } from "@/lib/requestApi";
+import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function VerifyEmail() {
+    const dispatch = useDispatch()
+
+    const navigate = useNavigate()
+
+    const { state } = useLocation()
+
+    const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
+
+    useEffect(() => {
+        if(!state?.email) navigate(-1);
+    }, [state])
+
+    useEffect(() => {
+        const { isLoading, data } = apiReqs
+
+        if(isLoading) dispatch(appLoadStart());
+        else dispatch(appLoadStop())
+
+        if(isLoading && data){
+            const { type, requestInfo } = data
+            
+            if(type == 'createVendor'){
+                onRequestApi({
+                    requestInfo,
+                    successCallBack: createVendorSuccess,
+                    failureCallback: createVendorFailure
+                })
+            }
+        }
+    }, [apiReqs])
+
+    const createVendorSuccess = async () => {
+        try {
+
+            dispatch(appLoadStop())
+
+            setApiReqs({ isLoading: false, data: null, errorMsg: null })
+
+            toast.success("Registration successfuly. Login to access your dashboard")
+
+            navigate('/new-vendor/verification-complete', { replace: true })
+
+            return;
+            
+        } catch (error) {
+            console.log(error)
+            return createVendorFailure({ errorMsg: 'Something went wrong! Try again later' })
+        }
+    }
+    const createVendorFailure = ({ errorMsg }) => {
+        setApiReqs({ isLoading: false, errorMsg, data: null })
+        toast.error(errorMsg)
+
+        return
+    }
+
+    if(!state?.email) return <></>
+
+    const { email } = state
+
+    const onValidated = () => {
+        setApiReqs({
+            isLoading: true,
+            errorMsg: null,
+            data: {
+                type: 'createVendor',
+                requestInfo: {
+                    url: 'https://tzsbbbxpdlupybfrgdbs.supabase.co/functions/v1/register-vendr',
+                    method: 'POST',
+                    data: state
+                }
+            }
+        })
+
+        return;
+    }
+
     return (
         <AuthForm
             image="/assets/email-icon.svg"
@@ -12,23 +96,10 @@ export default function VerifyEmail() {
                 0: (
                     <div className="flex flex-col items-center gap-4 mt-2">
                         {/* OTP Boxes */}
-                        <div className="flex justify-center gap-3">
-                            {Array(6)
-                                .fill("")
-                                .map((_, index) => (
-                                    <input
-                                        key={index}
-                                        type="text"
-                                        className="w-12 h-12 text-center border border-grey-300 rounded-lg text-lg bg-grey-50"
-                                        maxLength={1}
-                                    />
-                                ))}
-                        </div>
-
-                        {/* Timer */}
-                        <p className="text-sm text-grey-600">
-                            <span className="font-bold">00:59</span>
-                        </p>
+                        <OtpInput 
+                            onValidated={onValidated}
+                            email={email}
+                        />
                     </div>
                 ),
             }}

@@ -1,13 +1,19 @@
 import AuthForm from "@/components/AuthForm";
+import { useNavigate } from "react-router-dom";
 
 export default function VerificationComplete() {
+
+  const navigate = useNavigate()
+
+  const goToLogin = () => navigate('/login', { replace: true })
+
   return (
     <AuthForm
       image="/assets/accept.svg"
       title="Verification Complete"
       description="Your email has been successfully verified."
-      buttonText="Goto Dashboard"
-      buttonLink="/"
+      buttonText="Go to login"
+      buttonFunc={goToLogin}
       footerText=""
       styles={{
         wrapper: "bg-transparent max-w-sm mx-auto p-6",

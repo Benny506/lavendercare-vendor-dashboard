@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { ErrorMessage } from "formik";
 import { Link } from "react-router-dom";
+import ErrorMsg1 from "./ErrorMsg1";
 
 const AuthForm = ({
     image,
@@ -9,6 +11,8 @@ const AuthForm = ({
     fields = [],
     buttonText,
     buttonLink = "/", 
+    buttonErrMsg = null,
+    buttonFunc = null,
     footerText,
     footerLink,
     footerLinkText,
@@ -49,21 +53,62 @@ const AuthForm = ({
                 className={`${styles.form || "space-y-4"}`}
             >
                 {fields.map((field, index) => (
-                    <div key={index} className={`${styles.fieldWrapper || "flex flex-col"}`}>
-                        <label className={`${styles.label || "text-sm font-medium mb-1"}`}>
-                            {field.label}
-                        </label>
-                        <input
-                            type={field.type}
-                            placeholder={field.placeholder}
-                            className={`${styles.input || "border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring focus:border-purple-500"}`}
-                            required={field.required}
-                        />
-                        {customFields[index] && <div>{customFields[index]}</div>}
+                    <div
+                        key={index}
+                    >
+                        <div key={index} className={`${styles.fieldWrapper || "flex flex-col"}`}>
+                            <label className={`${styles.label || "text-sm font-medium mb-1"}`}>
+                                {field.label}
+                            </label>
+                            {
+                                (field.type == 'select' && field.options)
+                                ?
+                                    <select 
+                                        name={field.name}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        onBlur={field.handleBlur}
+                                        className={`${styles.input || "border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring focus:border-purple-500"}`}
+                                        required={field.required}                                    
+                                    >
+                                        <option value="" selected disabled>Select one</option>
+                                        {field?.options?.map((opt, optIndex) => (
+                                            <option value={opt} key={optIndex}>
+                                                { opt }
+                                            </option>
+                                        ))}
+                                    </select>
+                                :
+                                    <input
+                                        name={field.name}
+                                        type={field.type}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        onBlur={field.handleBlur}
+                                        placeholder={field.placeholder}
+                                        className={`${styles.input || "border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring focus:border-purple-500"}`}
+                                        required={field.required}
+                                    />                                
+                            }
+                            {customFields[index] && <div>{customFields[index]}</div>}
+                        </div>
+
+                        {
+                            field?.withErrMsg
+                            &&
+                                <ErrorMessage name={field.name}>
+                                    { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
+                                </ErrorMessage>
+                        }
                     </div>
                 ))}
 
-                {buttonText && (
+                {
+                    buttonErrMsg && 
+                        <ErrorMsg1 errorMsg={buttonErrMsg} position={'center'} />
+                }
+
+                {(buttonText && !buttonFunc) && (
                     <Link to={buttonLink}>
                         <Button 
                             type="button" 
@@ -73,6 +118,16 @@ const AuthForm = ({
                         </Button>
                     </Link>
                 )}
+
+                {buttonFunc && (
+                    <Button 
+                        type="button" 
+                        onClick={buttonFunc}
+                        className={`cursor-pointer ${styles.button || "w-full bg-purple-600 text-white hover:bg-purple-700"}`}
+                    >
+                        {buttonText}
+                    </Button>
+                )}                
             </form>
 
             {footerText && (

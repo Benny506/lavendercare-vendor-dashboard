@@ -2,15 +2,82 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Icon } from '@iconify/react'
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import CancelAppointment from './CancelAppointment'
 import CancelAppointmentSuccess from './CancelAppointmentSuccess'
 import ConfirmAppointment from './ConfirmAppointment'
 import ConfirmAppointmentSuccess from './ConfirmAppointmentSuccess'
+import { useSelector } from 'react-redux'
+import { getUserDetailsState } from '@/redux/slices/userDetailsSlice'
+import { toast } from 'react-toastify'
+import { clockTimer, isoToDateTime, timeToAMPM_FromHour } from '@/lib/utils'
+import { bookingsMap } from '@/lib/utilsJsx'
 
 const BookingDetails = () => {
     const navigate = useNavigate()
+    
+    const { state } = useLocation()
+    const booking_id = state?.booking_id
+
+    const bookings = useSelector(state => getUserDetailsState(state).bookings)
+    const services = useSelector(state => getUserDetailsState(state).services)
+
+    const [booking, setBooking] = useState()
+    const [service, setService] = useState()
+    const [timerStr, setTimerStr] = useState('')
+
+    useEffect(() => {
+
+        if(!booking_id) {
+            navigate('/bookings')
+        
+        } else{
+            const _b = (bookings || []).filter(b => b.id === booking_id)[0]
+            
+            if(!_b){
+                navigate('/bookings')
+                toast.info("Unable to locate single booking")
+            
+            } else{
+                const service = (services || []).filter(s => s?.id == _b?.service_id)[0]
+
+                if(!_b){
+                    navigate('/bookings')
+                    toast.info("Unable to locate single booking")
+                
+                } else{
+                    setBooking(_b)
+                    setService(service)
+                }                
+            }
+        }
+
+    }, [state])
+
+    useEffect(() => {
+        if(!booking) return;
+
+        const { day, start_hour } = booking
+
+        const timerInterval = setInterval(() => {
+            const { str, isZero } = clockTimer({ targetDate: day, startHour: start_hour })
+
+            setTimerStr(str)
+
+            if(isZero) clearInterval(timerInterval);
+        })
+
+        return () => {
+            clearInterval(timerInterval)
+        }
+    }, [booking])
+
+    if(!booking_id || !booking || !service) return <></>
+
+    const { service_name, service_category } = service
+    const { status } = booking
+
     return (
         <div className="w-full p-6 min-h-screen">
             {/* Back Button */}
@@ -23,30 +90,37 @@ const BookingDetails = () => {
                     <span className="text-2xl">
                         <Icon icon="ph:arrow-left" />
                     </span>
-                    <span className="font-semibold text-lg">Back to Services</span>
+                    <span className="font-semibold text-lg">Back to Bookings</span>
                 </button>
 
                 <p className="text-grey-700 font-bold">
-                    Appointment in 24days : 24hr : 24mins
+                    Appointment in { timerStr }
                 </p>
             </div>
 
             <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-bold text-grey-700">Massage therapy</h2>
+                <h2 className="text-xl font-bold text-grey-700">{ service_name }</h2>
                 <div className="flex gap-2">
-                    <Badge variant="secondary" className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">Self Care</Badge>
-                    <Badge variant="secondary" className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">Massage</Badge>
+                    <Badge variant="secondary" className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">{ service_category?.replaceAll("_", " ") }</Badge>
                 </div>
             </div>
 
             <div className="flex gap-4 my-6 bg-error-50 w-full p-4 rounded-2xl justify-between items-center">
                 <div className="flex flex-col justify-between text-grey-600">
-                    <p className="text-md font-semibold">
-                        Upcoming
+                    <p className="text-md font-semibold capitalize mb-1">
+                        { status }
                     </p>
-                    <p className="text-sm">This appointment has been confirmed</p>
+
+                    <p className="text-sm">
+                        { bookingsMap[status]?.feedBack }
+                    </p>
                 </div>
-                <p className='font-bold text-error-700'>Cancel Appointment</p>
+
+                {
+                    status == 'upcoming'
+                    &&
+                        <p className='font-bold text-error-700'>Cancel Appointment</p>
+                }
             </div>
 
             {/* Order Section */}
@@ -57,12 +131,12 @@ const BookingDetails = () => {
                     <div className="flex flex-col gap-2 items-center w-full border-b border-grey-200 pb-3 space-y-1">
                         <div className='flex items-center justify-between gap-4 w-full'>
                             <p>Order number:</p>
-                            <p className='font-bold'>#2ew345w34544</p>
+                            <p className='font-bold'>{booking?.id}</p>
                         </div>
 
                         <div className='flex items-center justify-between gap-4 w-full'>
                             <p>Order placed on:</p>
-                            <p className='font-bold'>23-08-23 / 03:00</p>
+                            <p className='font-bold'>{ isoToDateTime({ isoString: booking?.created_at }) }</p>
                         </div>
 
                         <div className='flex items-center justify-between gap-4 w-full'>
@@ -74,7 +148,7 @@ const BookingDetails = () => {
                     <div>
                         <div className='flex items-center justify-between gap-4 w-full py-3 font-bold text-lg'>
                             <p>Appointment set for:</p>
-                            <p>23-08-23 / 03:00 - 4:00PM</p>
+                            <p>{ booking?.day } / { timeToAMPM_FromHour({ hour: booking?.start_hour }) } - { timeToAMPM_FromHour({ hour: booking?.end_hour }) }</p>
                         </div>
                     </div>
                 </div>
@@ -91,7 +165,9 @@ const BookingDetails = () => {
                         <div className="flex flex-col gap-2 items-center w-full space-y-1">
                             <div className='flex items-center justify-between gap-4 w-full'>
                                 <p>Name:</p>
-                                <p className='font-bold'>Jane Doe</p>
+                                <p className='font-bold'>
+                                    { booking?.user_profile?.name }
+                                </p>
                             </div>
 
                             <div className='flex items-center justify-between gap-4 w-full'>
@@ -101,7 +177,9 @@ const BookingDetails = () => {
 
                             <div className='flex items-center justify-between gap-4 w-full'>
                                 <p>Status:</p>
-                                <p className='font-bold'>Pregnant</p>
+                                <p className='font-bold'>
+                                    { booking?.user_profile?.is_pregnant ? 'Pregnant' : 'Post-partum' }
+                                </p>
                             </div>
                         </div>
 
@@ -115,9 +193,12 @@ const BookingDetails = () => {
                     <h3 className="text-xl font-bold text-grey-700 mb-3">Summary</h3>
                     <div className="flex flex-col item-ceter justify-between bg-grey-100 rounded-2xl p-4">
                         <div className="flex flex-col gap-2 items-center w-full border-b border-grey-200 pb-3 space-y-1">
+                            
+                            {/* PERHAPS FETCH THIS FROM THE TRANSACTIONS TABLE  */}
+
                             <div className='flex items-center justify-between gap-4 w-full'>
                                 <p>Type:</p>
-                                <p className='font-semibold'>Fixed</p>
+                                <p className='font-semibold capitalize'>{ 'Fixed' }</p>
                             </div>
 
                             <div className='flex items-center justify-between gap-4 w-full'>
