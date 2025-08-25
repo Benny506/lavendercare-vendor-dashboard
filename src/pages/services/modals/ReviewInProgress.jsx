@@ -8,6 +8,7 @@ const ReviewInProgress = () => {
             description="We are currently reviewing your services. This process takes up to 24 hours. You will be notified once our team is done. If it meets all our requirements, this service will be added to the store."
             primaryButton="I understand"
             styles={{
+                wrapper: "max-w-xs md:max-w-md",
                 image: "mt-10",
                 description: "text-center text-grey-500 mt-2 mb-10",
                 footer: "flex flex-col gap-3 my-6 w-full",

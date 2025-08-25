@@ -29,6 +29,7 @@ const VerificationForm = () => {
                 title="Verify Account"
                 primaryButton="Submit"
                 styles={{
+                    wrapper: "max-w-xs md:max-w-md",
                     body: "mt-4 max-h-[480px] overflow-y-scroll no-scrollbar pr-1",
                     footer: "flex justify-end",
                     primaryButton: "bg-primary-500 rounded-4xl w-35 py-3 ",

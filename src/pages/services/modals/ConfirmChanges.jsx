@@ -20,7 +20,8 @@ const ConfirmChanges = () => {
                     primaryButton="Cancel, but keep Appointments"
                     secondaryButton="Cancel all appointments"
                     styles={{
-                        closeIconWrapper: "absolute top-10 right-10 z-10",
+                        wrapper: "max-w-xs md:max-w-md",
+                        closeIconWrapper: "absolute top-25 md:top-10 right-10 z-10",
                         closeButton: "text-grey-500 hover:text-grey-700 p-1 cursor-pointer",
                         closeIcon: "w-6 h-6",
                         image: "mt-10",

@@ -24,7 +24,7 @@ const WithdrawModal = () => {
                     // width="max-w-md"
                     primaryButton='Withdraw'
                     styles={{
-                        wrapper: "max-w-sm relative",
+                        wrapper: "max-w-xs md:max-w-sm relative",
                         content: "relative",
                         title: "text-lg font-bold text-left text-black relative",
                         closeIconWrapper: "absolute top-6 right-5 z-10",
