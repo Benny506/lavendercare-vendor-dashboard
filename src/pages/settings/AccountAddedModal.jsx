@@ -10,7 +10,8 @@ export default function AccountAddedModal() {
             secondaryButton="Done"
             styles={
                 {
-                    footer: "flex gap-6 mt-20 w-full font-bold",
+                    wrapper: "max-w-xs md:max-w-md",
+                    footer: "flex flex-col md:flex-row gap-6 mt-20 w-full font-bold",
                     primaryButton: "w-full px-5 py-3  bg-primary-50 text-primary-700 rounded-4xl",
                     secondaryButton: "w-full px-5 py-3  text-grey-50 bg-primary-500 rounded-4xl",
                 }

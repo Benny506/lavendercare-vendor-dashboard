@@ -9,6 +9,7 @@ const CancelChanges = () => {
             primaryButton="Yes, cancel changes"
             secondaryButton="No, go back"
             styles={{
+                wrapper: "max-w-xs md:max-w-md",
                 image: "mt-10",
                 description: "text-center text-grey-500 mt-2 mb-20",
                 footer: "flex flex-col gap-3 mt-6 w-full",

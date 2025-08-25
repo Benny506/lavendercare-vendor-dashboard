@@ -12,9 +12,9 @@ import ConfirmAppointmentSuccess from './ConfirmAppointmentSuccess'
 const BookingDetails = () => {
     const navigate = useNavigate()
     return (
-        <div className="w-full p-6 min-h-screen">
+        <div className="w-full py-6 px-0 md:p-6 min-h-screen">
             {/* Back Button */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:gap-0 mb-4 md:mb-0">
                 <button
                     type="button"
                     className="flex items-center gap-2 mb-6 text-primary-600 cursor-pointer"
@@ -39,7 +39,7 @@ const BookingDetails = () => {
                 </div>
             </div>
 
-            <div className="flex gap-4 my-6 bg-error-50 w-full p-4 rounded-2xl justify-between items-center">
+            <div className="flex flex-col md:flex-row gap-4 my-6 bg-error-50 w-full p-4 rounded-2xl justify-between items-start md:items-center">
                 <div className="flex flex-col justify-between text-grey-600">
                     <p className="text-md font-semibold">
                         Upcoming
@@ -83,7 +83,7 @@ const BookingDetails = () => {
 
             {/* Customer info and Summary  */}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 <div className="bg-white rounded-lg p-4 shadow ">
                     <h3 className="text-xl font-bold text-grey-700 mb-3">Customer Info</h3>

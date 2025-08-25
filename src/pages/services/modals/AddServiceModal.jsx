@@ -11,7 +11,7 @@ export default function AddServiceModal() {
                     primaryButton="Continue"
                     onClose={() => setIsOpen(false)}
                     styles={{
-                        wrapper: "max-w-md relative",
+                        wrapper: "max-w-xs md:max-w-md relative",
                         content: "relative",
                         title: "text-lg font-bold text-left text-black relative",
                         closeIconWrapper: "absolute top-6 right-5 z-10",

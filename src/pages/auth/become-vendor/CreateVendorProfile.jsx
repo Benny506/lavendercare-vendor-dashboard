@@ -12,7 +12,7 @@ export default function CreateVendorProfile() {
                    }
                 `}
             </style>
-            <div className="-mt-10 mr-10">
+            <div className="hidden md:block -mt-10 mr-10">
                 <VendorAccount />
             </div>
             <div className="w-screen flex justify-center -mt-6">
@@ -36,7 +36,7 @@ export default function CreateVendorProfile() {
                         )
                     }}
                     styles={{
-                        wrapper: "bg-transparent shadow-none p-8 max-w-lg w-full",
+                        wrapper: "bg-transparent shadow-none p-6 md:p-8 max-w-lg w-full -mt-2 md:mt-0",
                         title: "text-3xl font-bold text-center text-gray-800 mb-1",
                         description: "text-base text-gray-500 text-center mb-6",
                         fieldWrapper: "flex flex-col space-y-1",
@@ -45,6 +45,9 @@ export default function CreateVendorProfile() {
                         button: "w-full bg-primary-500 text-grey-50 text-base py-7 rounded-full font-bold mt-4 cursor-pointer",
                     }}
                 />
+            </div>
+            <div className="block md:hidden my-4 -mt-4">
+                <VendorAccount className="mx-auto justify-center"/>
             </div>
         </div>
     );

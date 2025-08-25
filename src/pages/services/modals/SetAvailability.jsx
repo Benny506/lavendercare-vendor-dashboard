@@ -13,7 +13,7 @@ const SetAvailability = () => {
                     primaryButton="Go back"
                     secondaryButton="Save and Continue"
                     styles={{
-                        wrapper: "max-w-md relative",
+                        wrapper: "max-w-xs md:max-w-md relative",
                         content: "relative",
                         width: "w-sm",
                         title: "text-lg font-bold text-left text-black relative",
@@ -21,13 +21,13 @@ const SetAvailability = () => {
                         closeButton: "text-grey-500 hover:text-grey-700 p-1 cursor-pointer",
                         closeIcon: "w-6 h-6",
                         description: "text-sm my-2",
-                        footer: "flex gap-2 justify-between mt-10 w-full font-bold",
+                        footer: "flex flex-col md:flex-row gap-2 justify-between mt-10 w-full font-bold",
                         primaryButton: "w-full px-5 py-3  bg-primary-50 text-primary-700 rounded-4xl",
                         secondaryButton: "w-full px-5 py-3  text-grey-50 bg-primary-500 rounded-4xl",
                     }}
                 >
-                    <div className='border border-grey-100 rounded-md flex w-full'>
-                        <div className='border-r border-grey-100 py-4 pb-2 px-2  space-y-4 flex flex-col items-center w-[45%] font-semibold text-sm'>
+                    <div className='border border-grey-100 rounded-md flex flex-col md:flex-row w-full'>
+                        <div className='md:border-r border-grey-100 py-4 pb-2 px-2  space-y-4 flex flex-col items-center md:w-[45%] font-semibold text-sm'>
                             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => (
                                 <div key={day} className={`w-full text-center py-3 ${index === 0 ? "text-grey-50 bg-primary-500" : ""} p-2 rounded-lg`}>
                                     <p>{day}</p>

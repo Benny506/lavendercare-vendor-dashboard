@@ -19,7 +19,7 @@ export default function VerifyEmail() {
                                     <input
                                         key={index}
                                         type="text"
-                                        className="w-12 h-12 text-center border border-grey-300 rounded-lg text-lg bg-grey-50"
+                                        className="w-10 md:w-12 h-12 text-center border border-grey-300 rounded-lg text-lg bg-grey-50"
                                         maxLength={1}
                                     />
                                 ))}
@@ -33,7 +33,7 @@ export default function VerifyEmail() {
                 ),
             }}
             styles={{
-                wrapper: "max-w-sm mx-auto p-6",
+                wrapper: "max-w-sm mx-auto md:p-6",
                 title: "text-xl font-bold text-center text-gray-800",
                 description: "text-gray-500 text-center",
             }}

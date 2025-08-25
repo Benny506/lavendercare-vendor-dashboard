@@ -49,7 +49,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex-1 p-4 min-h-screen">
+    <div className="flex-1 py-4 md:p-4 min-h-screen overflow-x-hidden">
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
         {/* Total Bookings */}
@@ -182,7 +182,7 @@ export default function Dashboard() {
 
       {/* Bookings Table */}
       <div className="mt-6 bg-white shadow rounded-lg p-4">
-        <div className="flex justify-between items-center mb-3 p-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 md:mb-3 p-2">
           <div className="flex flex-col gap-1">
             <h2 className="font-bold text-xl text-gray-900">Recent Bookings</h2>
             <p className="text-xs text-gray-400">
@@ -198,7 +198,7 @@ export default function Dashboard() {
           columns={columns}
           data={bookingsData}
           styles={{
-            wrapper: "overflow-x-auto",
+            wrapper: "overflow-x-auto max-w-2xs md:max-w-full",
             table: "w-full text-sm text-left",
             thead: "",
             headerRow: "text-gray-500 border-b border-t border-gray-200",
