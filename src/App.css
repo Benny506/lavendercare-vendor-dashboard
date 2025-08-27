@@ -1,3 +1,19 @@
+.fit-and-scroll{
+  flex: 1;
+  overflow-y: auto; /* use auto so scrollbar only shows when needed */
+  padding-bottom: 20px;
+  min-height: 0; /* crucial for flex children inside a fixed-height parent */
+}
+.fit-and-scroll-nav{
+  overflow-y: auto; /* use auto so scrollbar only shows when needed */
+  padding-bottom: 20px;
+  min-height: 0; /* crucial for flex children inside a fixed-height parent */  
+}
+
+
+
+
+
 /* font families  */
 .font-family-GT{
   font-family: 'GT Walsheim Pro';

@@ -36,11 +36,16 @@ const userDetailsSlice = createSlice({
                 
                 state.bookings = sortByStatusPriority(bookings)
             }
-        }
+        },
+        clearUserDetails: (state, action) => {
+            state.profile = null
+            state.services = []
+            state.bookings = []
+        }        
     }
 })
 
-export const { setUserDetails } = userDetailsSlice.actions
+export const { setUserDetails, clearUserDetails } = userDetailsSlice.actions
 
 export const getUserDetailsState = state => state.userDetailsSlice
 

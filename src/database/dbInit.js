@@ -40,7 +40,8 @@ export async function vendorLogin({ email, password }) {
     data: {
       profile: {
         ...data, ...infoData?.profile
-      }      
+      },
+      ...infoData      
     },
     errorMsg: null
   }

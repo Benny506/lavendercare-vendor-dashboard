@@ -24,6 +24,7 @@ import { useSelector } from "react-redux";
 import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
 import { formatNumberWithCommas, getUniqueByKey, sortByKey } from "@/lib/utils";
 import { getBookingStatusBadge } from "@/lib/utilsJsx";
+import { useNavigate } from "react-router-dom";
 
 function getMonthlyCounts(data) {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
@@ -47,11 +48,12 @@ function getMonthlyCounts(data) {
 
 export default function Dashboard() {
 
+  const navigate = useNavigate()
+
   const allBookings = useSelector(state => getUserDetailsState(state).bookings)
   const services = useSelector(state => getUserDetailsState(state).services)
 
   const [bookingsCount, setBookingsCount] = useState({ thisMonth: 0, lastMonth: 0, newClientsCount: 0 })
-  const [tab, setTab] = useState('locations')
   const [topServices, setTopServices] = useState([])
   const [bookings, setBookings] = useState([])
 
@@ -73,13 +75,14 @@ export default function Dashboard() {
     let thisMonthBookingsCount = 0
     let lastMonthBookingsCount = 0
     const newClientsCount = getUniqueByKey({
-      arr: bookings?.map(b => b?.user_profile),
+      arr: allBookings?.map(b => b?.user_profile),
       key: 'id'
     })?.length
+
     const servicesCount = {}
 
-    for(let i = 0; i < bookings.length; i++){
-      const b = bookings[i]
+    for(let i = 0; i < allBookings.length; i++){
+      const b = allBookings[i]
       const d = new Date(b?.day)
       const s_id = b?.service_id
 
@@ -117,7 +120,6 @@ export default function Dashboard() {
         return {
             ...b,
             serviceInfo: service,
-            location: 'Dummy location'
         }
     })    
 
@@ -130,7 +132,7 @@ export default function Dashboard() {
       lastMonth: lastMonthBookingsCount,
       newClientsCount
     })
-  }, [allBookings])
+  }, [allBookings, services])
 
   // Table columns configuration for recent bookings
   const columns = [
@@ -157,7 +159,10 @@ export default function Dashboard() {
       key: "action",
       label: "Actions",
       render: (row) => (
-        <button className="bg-primary-600 text-white px-4 py-1 rounded-full text-sm">
+        <button 
+          onClick={() => navigate('/bookings/booking', { state: { booking_id: row?.id } })}
+          className="cursor-pointer bg-primary-600 text-white px-4 py-1 rounded-full text-sm"
+        >
           View
         </button>
       ),
@@ -166,7 +171,7 @@ export default function Dashboard() {
 
 
   return (
-    <div className="flex-1 p-4 min-h-screen">
+    <div className=" py-4 md:p-4 overflow-x-hidden">
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
         {/* Total Bookings */}
@@ -201,7 +206,10 @@ export default function Dashboard() {
           )}
 
           <hr className="bg-[#D2C3EF] h-0.5 border-none" />
-          <div className="flex items-center gap-2 text-primary-600 font-extrabold">
+          <div 
+            onClick={() => navigate('/bookings')}
+            className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer"
+          >
             <p className="text-lg mt-3 cursor-pointer">View all bookings</p>
             <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
           </div>
@@ -229,10 +237,10 @@ export default function Dashboard() {
           )}
 
           <hr className="bg-[#D2C3EF] h-0.5 border-none" />
-          <div className="flex items-center gap-2 text-primary-600 font-extrabold">
+          {/* <div className="flex items-center gap-2 text-primary-600 font-extrabold">
             <p className="text-lg mt-3 cursor-pointer">View all clients</p>
             <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -259,81 +267,44 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <div className="flex border-b font-bold w-full bg-white shadow rounded-lg p-4 pb-0 mb-3">
-            {
-              [
-                { title: 'Top Locations', type: 'locations' },
-                { title: 'Popular Services', type: 'services' },
-              ]
-              .map((section, i) => {
-                const { title, type } = section
-
-                const isActive = type === tab
-
-                return(
-                  <button 
-                    key={i}
-                    onClick={() => setTab(type)}
-                    className={`cursor-pointer flex-1 pb-2 px-3 ${isActive ? 'text-primary-700 border-b-2 border-primary-700' : 'text-gray-400'}`}
-                  >
-                    { title }
-                  </button>                  
-                )
-              })
-            }
+          <div className="flex font-bold w-full bg-white shadow rounded-lg p-4 pb-0 mb-3">
+            <div 
+              className={`flex-1 pb-2 px-3 text-grey-600 text-center`}
+            >
+              Top Locations && Services
+            </div>  
           </div>
 
           <ul className="text-sm text-gray-700 space-y-2 bg-white shadow rounded-lg p-4 pt-2">
             {
-              tab === 'services'
+              topServices?.length > 0
               ?
-                topServices?.length > 0
-                ?
-                  topServices?.map((s, i) => {
-                    const { info, count } = s
+                topServices?.map((s, i) => {
+                  const { info, count } = s
 
-                    return (
-                      <li
-                        key={i}
-                        className="flex flex-col justify-between px-2 border-b border-gray-200 pb-1 last:border-none"
-                      >
-                        <span className="font-bold text-gray-700 pt-1">
-                          {i + 1 < 10 ? `0${i+1}` : i+1}. { info?.service_name }
-                        </span>
-                        <span className="px-5 mt-1 text-gray-400">
-                          {count} appointments
-                        </span>
-                      </li>                  
-                    )
-                  })
-                :
-                  <div className="flex flex-col items-center justify-center py-22">
-                    <p className="text-gray-500 text-xl font-medium">
-                      No data to display
-                    </p>
-                  </div>          
-              :    
-                topLocations.length ? (
-                  topLocations.map((loc) => (
+                  return (
                     <li
-                      key={loc.id}
+                      key={i}
                       className="flex flex-col justify-between px-2 border-b border-gray-200 pb-1 last:border-none"
                     >
                       <span className="font-bold text-gray-700 pt-1">
-                        {loc.id < 10 ? `0${loc.id}` : loc.id}. {loc.name}
+                        {i + 1 < 10 ? `0${i+1}` : i+1}. { info?.service_name }
                       </span>
                       <span className="px-5 mt-1 text-gray-400">
-                        {loc.orders} orders
+                        {count} appointments
                       </span>
-                    </li>
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-22">
-                    <p className="text-gray-500 text-xl font-medium">
-                      No data to display
-                    </p>
-                  </div>
-                )              
+                      <span className="px-5 mt-1 text-gray-400">
+                        At: {info?.location}
+                      </span>                      
+                    </li>                  
+                  )
+                })
+              :
+                <div className="flex flex-col items-center justify-center py-22">
+                  <p className="text-gray-500 text-xl font-medium">
+                    No data to display
+                  </p>
+                </div>                      
             }
           </ul>
         </div>
@@ -341,15 +312,18 @@ export default function Dashboard() {
 
       {/* Bookings Table */}
       <div className="mt-6 bg-white shadow rounded-lg p-4">
-        <div className="flex justify-between items-center mb-3 p-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 md:mb-3 p-2">
           <div className="flex flex-col gap-1">
             <h2 className="font-bold text-xl text-gray-900">Recent Bookings</h2>
             <p className="text-xs text-gray-400">
               See your most recent bookings below
             </p>
           </div>
-          <button className="text-primary-500 font-bold flex items-center gap-1">
-            View all orders <Icon icon="mdi:arrow-right" className="text-xl" />
+          <button 
+            onClick={() => navigate('/bookings')}
+            className="cursor-pointer text-primary-500 font-bold flex items-center gap-1"
+          >
+            View all bookings <Icon icon="mdi:arrow-right" className="text-xl" />
           </button>
         </div>
 
@@ -357,7 +331,7 @@ export default function Dashboard() {
           columns={columns}
           data={bookings.slice(0, 6)}
           styles={{
-            wrapper: "overflow-x-auto",
+            wrapper: "overflow-x-auto max-w-2xs md:max-w-full",
             table: "w-full text-sm text-left",
             thead: "",
             headerRow: "text-gray-500 border-b border-t border-gray-200",

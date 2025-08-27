@@ -104,7 +104,7 @@ export default function VerifyEmail() {
                 ),
             }}
             styles={{
-                wrapper: "max-w-sm mx-auto p-6",
+                wrapper: "max-w-sm mx-auto md:p-6",
                 title: "text-xl font-bold text-center text-gray-800",
                 description: "text-gray-500 text-center",
             }}

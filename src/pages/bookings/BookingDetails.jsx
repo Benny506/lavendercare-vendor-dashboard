@@ -11,7 +11,7 @@ import ConfirmAppointmentSuccess from './ConfirmAppointmentSuccess'
 import { useSelector } from 'react-redux'
 import { getUserDetailsState } from '@/redux/slices/userDetailsSlice'
 import { toast } from 'react-toastify'
-import { clockTimer, isoToDateTime, timeToAMPM_FromHour } from '@/lib/utils'
+import { clockTimer, formatNumberWithCommas, isoToDateTime, timeToAMPM_FromHour } from '@/lib/utils'
 import { bookingsMap } from '@/lib/utilsJsx'
 
 const BookingDetails = () => {
@@ -79,13 +79,13 @@ const BookingDetails = () => {
     const { status } = booking
 
     return (
-        <div className="w-full p-6 min-h-screen">
+        <div className="w-full py-6 px-0 md:p-6 min-h-screen">
             {/* Back Button */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:gap-0 mb-4 md:mb-0">
                 <button
                     type="button"
                     className="flex items-center gap-2 mb-6 text-primary-600 cursor-pointer"
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate('/bookings')}
                 >
                     <span className="text-2xl">
                         <Icon icon="ph:arrow-left" />
@@ -105,7 +105,7 @@ const BookingDetails = () => {
                 </div>
             </div>
 
-            <div className="flex gap-4 my-6 bg-error-50 w-full p-4 rounded-2xl justify-between items-center">
+            <div className="flex flex-col md:flex-row gap-4 my-6 bg-error-50 w-full p-4 rounded-2xl justify-between items-start md:items-center">
                 <div className="flex flex-col justify-between text-grey-600">
                     <p className="text-md font-semibold capitalize mb-1">
                         { status }
@@ -157,7 +157,7 @@ const BookingDetails = () => {
 
             {/* Customer info and Summary  */}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 <div className="bg-white rounded-lg p-4 shadow ">
                     <h3 className="text-xl font-bold text-grey-700 mb-3">Customer Info</h3>
@@ -192,42 +192,32 @@ const BookingDetails = () => {
                 <div className="bg-white rounded-lg p-4 shadow ">
                     <h3 className="text-xl font-bold text-grey-700 mb-3">Summary</h3>
                     <div className="flex flex-col item-ceter justify-between bg-grey-100 rounded-2xl p-4">
-                        <div className="flex flex-col gap-2 items-center w-full border-b border-grey-200 pb-3 space-y-1">
-                            
-                            {/* PERHAPS FETCH THIS FROM THE TRANSACTIONS TABLE  */}
+                        <div className="flex flex-col gap-2 items-center w-full border-b border-grey-200 pb-3 space-y-1">                        
 
                             <div className='flex items-center justify-between gap-4 w-full'>
                                 <p>Type:</p>
-                                <p className='font-semibold capitalize'>{ 'Fixed' }</p>
+                                <p className='font-semibold capitalize'>{ booking?.pricing_type }</p>
                             </div>
 
                             <div className='flex items-center justify-between gap-4 w-full'>
                                 <p>Cost:</p>
-                                <p className='font-semibold'>₦4200</p>
-                            </div>
-
-                            <div className='flex items-center justify-between gap-4 w-full'>
-                                <p>Discount:</p>
-                                <p className='font-semibold'>+₦2200</p>
-                            </div>
-
-                            <div className='flex items-center justify-between gap-4 w-full'>
-                                <p>Processing fee (2%):</p>
-                                <p className='font-semibold text-error-500'>-₦200</p>
+                                <p className='font-semibold'> { booking?.currency } { formatNumberWithCommas(booking?.amount) } </p>
                             </div>
                         </div>
 
                         <div>
                             <div className='flex items-center justify-between gap-4 w-full py-3 font-bold text-lg'>
                                 <p>Total:</p>
-                                <p>₦7200</p>
+                                <p>
+                                    { booking?.currency } { formatNumberWithCommas(booking?.amount) }
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow my-6">
+            {/* <div className="bg-white rounded-lg p-4 shadow my-6">
                 <div className="flex items-center mb-3 gap-2">
                     <h3 className="text-xl font-bold text-grey-700">Customer Review</h3>
                 </div>
@@ -243,8 +233,6 @@ const BookingDetails = () => {
                     </div>
                 </div>
 
-
-                {/* Review Card */}
                 {Array(2).fill(0).map((_, i, arr) => (
                     <div
                         key={i}
@@ -266,7 +254,7 @@ const BookingDetails = () => {
                         </p>
                     </div>
                 ))}
-            </div>
+            </div> */}
 
             {/* Uncomment for cancel appointment modal  */}
             {/* <CancelAppointment /> */}

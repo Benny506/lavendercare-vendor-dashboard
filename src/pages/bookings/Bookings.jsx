@@ -152,7 +152,7 @@ const Bookings = () => {
     return (
         <div className="mt-4">
             {/* ✅ Summary Boxes */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6 overscroll-x-none">
                 {Object.keys(bookingsCount).map((status, index) => {
 
                     const iconColor = bookingsMap[status]?.color
@@ -185,18 +185,18 @@ const Bookings = () => {
 
             {/* ✅ Table Section */}
             <div className="bg-white rounded-2xl border">
-                <div className="w-full flex items-center justify-between gap-4 p-4 pb-1 border-b-1">
+                <div className="w-full flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-4 pb-1 border-b-1">
                     <div className="flex flex-col gap-1">
                         <h2 className="font-bold text-xl text-gray-900">All Bookings</h2>
                         <p className="text-xs text-gray-400">See all your bookings below</p>
                     </div>
 
                     {/* ✅ Search & Filter Controls */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-3">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-3">
                         {/* Search Input */}
                         <Input
                             placeholder="Search by booking number or name"
-                            className="w-full min-w-sm py-5"
+                            className="w-full md:min-w-sm py-5"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -223,7 +223,7 @@ const Bookings = () => {
                     columns={columns}
                     data={pageItems}
                     styles={{
-                        wrapper: "p-3 overflow-x-auto",
+                        wrapper: "md:p-3 overflow-x-auto max-w-xs md:max-w-full",
                         table: "w-full border-collapse -mt-3",
                         headerRow: "bg-grey-50 text-left text-gray-700 text-sm border-b border-grey-100",
                         headerCell: "p-4 font-semibold",

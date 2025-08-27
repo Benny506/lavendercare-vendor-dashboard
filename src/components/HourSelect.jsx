@@ -8,7 +8,7 @@ const HourSelect = ({ value, onChange=()=>{}, required, onBlur=()=>{}, name }) =
         required={required}
         value={value}
         onChange={onChange}
-        className='p-2 border-[1px] border-grey-300 rounded-lg focus:outline-none'
+        className='p-2 border-[1px] border-grey-300 rounded-lg w-full focus:outline-none'
     >
         <option
             value={""}

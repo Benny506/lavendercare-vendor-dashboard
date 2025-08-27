@@ -30,7 +30,7 @@ const SetServiceDetails = ({
                 >
                     {({ handleBlur, handleChange, handleSubmit, values }) => (
                         <Modal
-                            title="Set Pricing"
+                            title="Set Details"
                             primaryButton="Go back"
                             secondaryButton={continueBtnText || "Continue"}
                             onClose={hide}

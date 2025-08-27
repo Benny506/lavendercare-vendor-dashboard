@@ -13,15 +13,15 @@ export default function ProtectedRoute({ children }){
 
     useEffect(() => {
         if(!userProfile?.id){
-            navigate('/', { replace: true })
+            navigate('/login', { replace: true })
         }
     }, [userProfile])
 
     if(!userProfile?.id) return <></>
 
     return(
-        <div> 
+        <> 
             { children }
-        </div>
+        </>
     )
 }

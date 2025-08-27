@@ -3,7 +3,7 @@ export const serviceStatuses = [
 ]
 
 export const bookingStatuses = [
-  'upcoming', 'ongoing', 'attended', 'cancelled', 'missed'
+  'new', 'ongoing', 'completed', 'cancelled', 'missed'
 ]
 
 export const vendorServicesOptions = [
@@ -17,6 +17,10 @@ export const vendorServicesOptions = [
 ]
 
 export const currencies = ['NGN']
+
+export const phoneNumberCountryCodes = ['+234']
+
+export const ticketFields = ['billing', 'account', 'bookings', 'services', 'other']
 
 // Sidebar list 
 export const SidebarItems = [

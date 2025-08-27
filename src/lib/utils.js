@@ -55,18 +55,18 @@ export function getAppointmentStatus({ status, date_ISO, startHour, endHour }) {
   const hasStarted = now >= bookingStartTime;
   const hasEnded = now > bookingEndTime;
 
-  // 1) If the appointment is upcoming and is currently in progress
+  // 1) If the appointment is new and is currently in progress
   if (
-    (status === "upcoming" || status == "awaiting_completion") &&
+    (status === "new" || status == "awaiting_completion") &&
     hasStarted &&
     !hasEnded
   ) {
     return "ongoing";
   }
 
-  // 2) upcoming → either still upcoming or missed
-  if (status === "upcoming") {
-    return hasStarted ? "missed" : "upcoming";
+  // 2) new → either still new or missed
+  if (status === "new") {
+    return hasStarted ? "missed" : "new";
   }
 
   // 3) Cancelled → as is
@@ -74,9 +74,9 @@ export function getAppointmentStatus({ status, date_ISO, startHour, endHour }) {
     return "cancelled";
   }
 
-  // 4) attended → as is
-  if (status === "attended") {
-    return "attended";
+  // 4) completed → as is
+  if (status === "completed") {
+    return "completed";
   }
 
   // 5) awaiting_completion → as is
@@ -133,6 +133,12 @@ export const isoToDateTime = ({ isoString }) => {
     .toFormat("ccc LLL dd. hh:mma"); 
 };
 
+export function isoToAMPM({ isoString }) {
+  const dt = DateTime.fromISO(isoString);
+  if (!dt.isValid) return '';
+  return dt.toFormat('hh:mm a'); // hh = 2-digit hour, a = AM/PM
+}
+
 export function getUniqueByKey({ arr, key }) {
   const seen = new Set();
   return arr.filter(item => {
@@ -143,6 +149,23 @@ export function getUniqueByKey({ arr, key }) {
     seen.add(val);
     return true;
   });
+}
+
+export function removeDuplicates(arr) {
+  return [...new Set(arr)];
+}
+
+export function removeDuplicatesWithCount(arr) {
+  const counts = {}
+
+  arr.forEach(item => {
+    counts[item] = (counts[item] || 0) + 1;
+  });
+
+  return {
+    unique: Object.keys(counts),
+    counts
+  };
 }
 
 export function sortByKey({ arr, key, order = "asc" }) {
@@ -165,7 +188,7 @@ export const sortByStatusPriority = (arr) => {
     'ongoing',
     'new',
     'awaiting_completion',
-    'attended',
+    'completed',
     'missed',
     'cancelled'
   ];

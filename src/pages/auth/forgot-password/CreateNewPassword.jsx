@@ -13,7 +13,7 @@ const CreateNewPassword = () => {
                 buttonText="Create Password"
                 buttonLink="/recover-password/password-recovered"
                 styles={{
-                    wrapper: "bg-transparent max-w-md mx-auto p-6",
+                    wrapper: "bg-transparent max-w-md mx-auto -mt-2 md:mt-0 p-6",
                     title: "text-3xl font-bold text-center text-gray-800 mb-1",
                     description: "text-base text-gray-500 text-center mb-6",
                     fieldWrapper: "flex flex-col space-y-1",

@@ -8,7 +8,7 @@ const RecoverPassword = () => {
         <div>
             <button
                 type="button"
-                className="absolute top-20 left-20 z-50 flex items-center gap-2 cursor-pointer text-primary-600"
+                className="absolute top-16 md:top-20 left-4 md:left-20 z-50 flex items-center gap-2 cursor-pointer text-primary-600"
                 onClick={() => navigate(-1)}
             >
                 <span className="text-2xl">

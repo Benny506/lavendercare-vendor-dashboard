@@ -13,6 +13,7 @@ const ReviewInProgress = ({ isOpen, hide }) => {
             primaryButtonFunc={hide}
             onClose={hide}
             styles={{
+                wrapper: "max-w-xs md:max-w-md",
                 image: "mt-10",
                 description: "text-center text-grey-500 mt-2 mb-10",
                 footer: "flex flex-col gap-3 my-6 w-full",

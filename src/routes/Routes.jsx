@@ -22,6 +22,7 @@ import BankAccounts from "@/pages/settings/BankAccounts";
 import ChangePassword from "@/pages/settings/ChangePassword";
 import Notifications from "@/pages/notifications/Notifications";
 import AutoLogin from "@/components/AutoLogin";
+import Support from "@/pages/support/Support";
 
 const AppRoutes = () => {
   return (
@@ -60,6 +61,7 @@ const AppRoutes = () => {
             <Route path="change-password" element={<ChangePassword />} />
           </Route>
 
+          <Route path="support" element={<Support />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>

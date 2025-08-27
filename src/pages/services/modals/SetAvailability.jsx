@@ -98,14 +98,14 @@ const SetAvailability = ({
                     secondaryButton={continueBtnText || "Save and Continue"}
                     width='w-full'
                     styles={{
-                        wrapper: "max-w-[70vw] relative",
+                        wrapper: "w-full lg:max-w-[70vw] relative",
                         content: "relative",
                         title: "text-lg font-bold text-left text-black relative",
                         closeIconWrapper: "absolute top-6 right-5 z-10",
                         closeButton: "text-grey-500 hover:text-grey-700 p-1 cursor-pointer",
                         closeIcon: "w-6 h-6",
                         description: "text-sm my-2",
-                        footer: "flex gap-2 justify-between mt-10 w-full font-bold",
+                        footer: "flex flex-col md:flex-row gap-2 justify-between mt-10 w-full font-bold",
                         primaryButton: "w-full px-5 py-3  bg-primary-50 text-primary-700 rounded-4xl",
                         secondaryButton: "w-full px-5 py-3  text-grey-50 bg-primary-500 rounded-4xl",
                     }}
@@ -128,8 +128,8 @@ const SetAvailability = ({
                         }
                     </div>
 
-                    <div className='border border-grey-100 rounded-md flex w-full'>
-                        <div className='border-r border-grey-100 py-4 pb-2 px-2  space-y-4 flex flex-col items-center w-[20%] font-semibold text-sm'>
+                    <div className='border border-grey-100 rounded-md lg:flex block w-full'>
+                        <div className='border-r border-grey-100 py-4 pb-2 px-2  space-y-4 flex flex-row flex-wrap lg:flex-col items-center lg:w-[20%] w-full lg:mb-0 mb-4 font-semibold text-sm'>
                             {Object.keys(days).map((day, index) => {
 
                                 const active = day === selectedDay ? true : false
@@ -137,7 +137,7 @@ const SetAvailability = ({
                                 const handleDayClick = () => setSelectedDay(day)
 
                                 return (
-                                    <div key={day} onClick={handleDayClick} className={`w-full text-center py-3 ${active ? "text-grey-50 bg-primary-500" : "cursor-pointer hover:bg-gray-100"} p-2 rounded-lg`}>
+                                    <div key={day} onClick={handleDayClick} className={`lg:w-full w-1/2 text-center py-3 ${active ? "text-grey-50 bg-primary-500" : "cursor-pointer hover:bg-gray-100"} p-2 rounded-lg`}>
                                         <p>{day}</p>
                                     </div>
                                 )}
@@ -227,6 +227,7 @@ const SetAvailability = ({
 
                                     <Button
                                         onClick={handleSubmit}
+                                        className={'bg-primary-600'}
                                     >
                                         Add
                                     </Button>

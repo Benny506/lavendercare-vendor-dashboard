@@ -94,10 +94,10 @@ export default function Services() {
     })
 
     return (
-        <div className="flex flex-col gap-6 p-6 w-full">
+        <div className="flex flex-col gap-6 py-6 px-0 md:py-6 md:px-6 w-full">
             {/* Top Summary Boxes */}
-            <div className="grid grid-cols-2">
-                <div className=" bg-grey-50 rounded-l-sm p-4 flex flex-col justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-0">
+                <div className=" bg-grey-50 rounded-sm md:rounded-l-sm p-4 flex flex-col justify-between">
                     <div className=" w-full flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <Icon icon="weui:setting-outlined" width="24" height="24" className=" text-success-500" />
@@ -111,7 +111,7 @@ export default function Services() {
                         <div className="w-3 h-1 my-6 bg-black"></div>
                     )}
                 </div>
-                <div className="bg-primary-50 rounded-r-sm p-4 flex flex-col justify-between">
+                <div className="bg-primary-50 rounded-sm md:rounded-r-sm p-4 flex flex-col justify-between">
                     <div className=" w-full flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <Icon icon="weui:setting-outlined" width="24" height="24" className=" text-error-500" />
@@ -130,9 +130,9 @@ export default function Services() {
 
             <div className="bg-white rounded-2xl border">
                 {/* Search and Filter */}
-                <div className="w-full flex items-center justify-between gap-4 p-4 pb-1 border-b-1">
+                <div className="w-full flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-4 pb-4 lg:pb-1 border-b-1">
 
-                    <div className="flex justify-between items-center mb-3 p-2">
+                    <div className="flex justify-between items-center lg:mb-3 p-2">
                         <div className="flex flex-col gap-1">
                             <h2 className="font-bold text-xl text-gray-900">All Services</h2>
                             <p className="text-xs text-gray-400">
@@ -141,14 +141,14 @@ export default function Services() {
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <div className="relative">
                             {/* <Icon icon="iconamoon:search" width="24" height="24" className="absolute text-red-50 left-2 top-2" /> */}
                             <Input 
                                 value={searchFilter}
                                 onChange={e => setSearchFilter(e.target.value)}
                                 placeholder="Search services" 
-                                className="w-full min-w-sm py-5" 
+                                className="w-full py-5" 
                             />
                         </div>
 
@@ -194,8 +194,8 @@ export default function Services() {
 
                 {/* Service Cards */}
                 {filteredServices && filteredServices.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-4 p-4">
-                        {filteredServices.map((service) => {
+                    <div className="flex flex-wrap p-4 justify-between">
+                        {filteredServices.map((service, i) => {
                             
                             const { service_name, service_category, pricing_type,
                                 amount, status, currency
@@ -203,43 +203,47 @@ export default function Services() {
 
                             return (
                                 <div
-                                    key={service.id}
-                                    className="bg-white border rounded-xl p-4 space-y-4"
+                                    key={service?.id}
+                                    className={`lg:w-1/2 w-full lg:mb-0 mb-2 ${i+1%2===0 ? 'pl-2' : 'pr-2'}`}
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <p className="font-semibold">{service_name}</p>
+                                    <div
+                                        className="w-full bg-white border rounded-xl p-4 space-y-4"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-semibold">{service_name}</p>
+
+                                            <div className="flex gap-2">
+                                                <Badge variant="outline" className='font-bold text-grey-700 bg-grey-100 border-none py-1 px-2 rounded-2xl'>
+                                                    {service_category?.replaceAll("_", " ")}
+                                                </Badge>                                            
+                                            </div>
+                                        </div>
+
+                                        <p className="text-sm text-grey-700 font-medium">
+                                            {pricing_type} Price: {currency} {formatNumberWithCommas(amount)}
+                                        </p>
 
                                         <div className="flex gap-2">
-                                            <Badge variant="outline" className='font-bold text-grey-700 bg-grey-100 border-none py-1 px-2 rounded-2xl'>
-                                                {service_category?.replaceAll("_", " ")}
-                                            </Badge>                                            
-                                        </div>
-                                    </div>
+                                            <Switch checked={status === "active"} />
+                                            <div className="flex flex-1 items-center justify-between">
+                                                <div>
+                                                    {getServiceStatusBadge({ status })}
+                                                    {
+                                                        (status != 'active')
+                                                        &&
+                                                            <p className="text-xs">
+                                                                Prospective clients can not see this service
+                                                            </p>                                                    
+                                                    }
+                                                </div>
 
-                                    <p className="text-sm text-grey-700 font-medium">
-                                        {pricing_type} Price: {currency} {formatNumberWithCommas(amount)}
-                                    </p>
-
-                                    <div className="flex gap-2">
-                                        <Switch checked={status === "active"} />
-                                        <div className="flex flex-1 items-center justify-between">
-                                            <div>
-                                                {getServiceStatusBadge({ status })}
-                                                {
-                                                    (status != 'active')
-                                                    &&
-                                                        <p className="text-xs">
-                                                            Prospective clients can not see this service
-                                                        </p>                                                    
-                                                }
-                                            </div>
-
-                                            <div 
-                                                onClick={() => navigate('/services/service', { state: { service_id: service?.id } })}
-                                                className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer"
-                                            >
-                                                <p className="text-sm mt-3">View</p>
-                                                <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
+                                                <div 
+                                                    onClick={() => navigate('/services/service', { state: { service_id: service?.id } })}
+                                                    className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer"
+                                                >
+                                                    <p className="text-sm mt-3">View</p>
+                                                    <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -253,8 +257,8 @@ export default function Services() {
                         <h3 className="text-lg font-semibold text-gray-600 mb-2">
                             No services to display
                         </h3>
-                        <p className="text-sm text-gray-500">
-                            You have not added any services to your LavenderCare shop
+                        <p className="text-sm text-gray-500 text-center">
+                            You have not added any services
                         </p>
                     </div>
                 )}

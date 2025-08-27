@@ -74,7 +74,7 @@ export default function CreateVendorProfile() {
                    }
                 `}
             </style>
-            <div className="-mt-10 mr-10">
+            <div className="hidden md:block -mt-10 mr-10">
                 <VendorAccount />
             </div>
             <div className="w-screen flex justify-center -mt-6">
@@ -83,7 +83,7 @@ export default function CreateVendorProfile() {
                         business_name: yup.string().required("Business name is required"),
                         email: yup.string().email("Must be a valid email address").required("Email is required"),
                         service_category: yup.string().required("Service category is required"),
-                        phone_number: yup.string().required("Phone number is required"),
+                        phone_number: yup.string().required("Phone number is required").matches(/^\d+$/, "Phone number must contain only digits"),
                         password: yup
                             .string()
                             .required('Password is required')
@@ -161,6 +161,9 @@ export default function CreateVendorProfile() {
                         />
                     )}
                 </Formik>
+            </div>
+            <div className="block md:hidden my-4 -mt-4">
+                <VendorAccount className="mx-auto justify-center"/>
             </div>
         </div>
     );

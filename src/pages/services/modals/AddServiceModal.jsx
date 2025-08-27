@@ -1,8 +1,11 @@
 import ErrorMsg1 from "@/components/ErrorMsg1";
 import Modal from "@/components/Modal";
+import { Button } from "@/components/ui/button";
 import { services, vendorServicesOptions } from "@/constants/constant";
 import { ErrorMessage, Formik } from "formik";
+import { Minus } from "lucide-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import * as yup from 'yup'
 
 export default function AddServiceModal({ 
@@ -19,12 +22,14 @@ export default function AddServiceModal({
                     validationSchema={yup.object().shape({
                         service_name: yup.string().max(20, "Must not be more than 20 characters").required("Service name is required"),
                         service_category: yup.string().required("Service category is required"),
-                        service_details: yup.string().required("Service details is required")
+                        service_details: yup.string().required("Service details is required"),
+                        location: yup.string().required("Service location is required"),
                     })}
                     initialValues={{
                         service_name: info?.service_name || '',
                         service_category: info?.service_category || '',
-                        service_details: info?.service_details || ''
+                        service_details: info?.service_details || '',
+                        location: info?.location || ''
                     }}
                     onSubmit={(values) => {
                         handleContinueBtnClick(values)
@@ -48,7 +53,7 @@ export default function AddServiceModal({
                                     "bg-primary-500 text-white flex items-center gap-2 rounded-4xl !px-9 !py-3 !h-auto",
                             }}
                         >                           
-                            <form className="space-y-6">
+                            <div className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-medium text-grey-600 mb-1">Service Name</label>
                                     <input
@@ -65,6 +70,22 @@ export default function AddServiceModal({
                                         { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
                                     </ErrorMessage>
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-grey-600 mb-1">Location</label>
+                                    <input
+                                        name="location"
+                                        value={values.location}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        type="text"
+                                        placeholder="Where can one find your service"
+                                        className="w-full border border-grey-300 rounded-md p-2"
+                                    />
+                                    <ErrorMessage name="location">
+                                        { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
+                                    </ErrorMessage>
+                                </div>                                
 
                                 <div>
                                     <label className="block text-sm font-medium text-grey-600 mb-1">Service Category</label>
@@ -110,7 +131,7 @@ export default function AddServiceModal({
                                         { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
                                     </ErrorMessage>                                      
                                 </div>
-                            </form>
+                            </div>
                         </Modal>
                     )}
                 </Formik>

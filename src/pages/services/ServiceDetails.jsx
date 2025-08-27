@@ -23,6 +23,7 @@ import supabase from "@/database/dbInit";
 import { getUserDetailsState, setUserDetails } from "@/redux/slices/userDetailsSlice";
 import SetServiceDetails from "./modals/SetServiceDetails";
 import SetAvailability from "./modals/SetAvailability";
+import AddServiceModal from "./modals/AddServiceModal";
 
 export default function ServiceDetails() {
   const dispatch = useDispatch()
@@ -51,6 +52,7 @@ export default function ServiceDetails() {
     
     if(!s){
       toast.info("Unable to find service")
+      navigate('/services')
     
     } else{
       setService(s)
@@ -122,7 +124,7 @@ export default function ServiceDetails() {
   if(!service) return <></>
 
   const { id, service_name, availability, pricing_type, currency, amount,
-    status, service_category, service_details
+    status, service_category, service_details, location
    } = service
 
 
@@ -144,8 +146,8 @@ export default function ServiceDetails() {
     })    
   }
 
-  const updateServiceDetails = ({ service_details }) => {
-    if(!service_details){
+  const updateServiceDetails = ({ service_details, service_category, location, service_name }) => {
+    if(!service_details || !service_category || !location || !service_name){
       toast.info("Not all fields are set")
       return
     }
@@ -156,7 +158,10 @@ export default function ServiceDetails() {
       data: {
         type: 'editService',
         requestInfo: {
-          service_details
+          service_details,
+          service_category, 
+          location, 
+          service_name
         }
       }
     })
@@ -194,9 +199,9 @@ export default function ServiceDetails() {
   }
 
   return (
-    <div className="w-full p-6 min-h-screen">
+    <div className="w-full py-4 md:py-6 px-0 md:px-6 min-h-screen">
       {/* Back Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 md:gap-0 mb-4 md:mb-0">
         <button
           type="button"
           className="flex items-center gap-2 mb-6 text-primary-600 cursor-pointer"
@@ -205,7 +210,7 @@ export default function ServiceDetails() {
           <span className="text-2xl">
             <Icon icon="ph:arrow-left" />
           </span>
-          <span className="font-semibold text-lg">Back to Services</span>
+          <span className="font-semibold md:text-lg text-sm">Back to Services</span>
         </button>
 
         <Button onClick={() => setEditModals({ type: 'availability' })} className="bg-success-500 rounded-4xl py-6 px-5 text-white">
@@ -246,7 +251,7 @@ export default function ServiceDetails() {
         <h3 className="text-xl font-bold text-grey-700 mb-3">Pricing</h3>
 
         <div className="flex item-ceter justify-between bg-grey-100 rounded-2xl p-4">
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center gap-5">
             <span>Type : <Badge className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">{pricing_type}</Badge></span>
             <div>|</div>
             <span>Price/Session: <strong> {formatNumberWithCommas(amount)} </strong></span>
@@ -269,20 +274,24 @@ export default function ServiceDetails() {
         </div>
         
         <ul className="list-disc list-inside text-gray-600 flex flex-col gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4">
-          { service_details }
-        </ul>
-      </div>
+          <li> 
+            { service_details } 
+          </li>
+          <li>
+            Location: { location }
+          </li>
+        </ul>      
+      </div>    
 
       {/* Customer Reviews */}
-      <div className="bg-white rounded-lg p-4 shadow">
+      {/* <div className="bg-white rounded-lg p-4 shadow">
         <div className="flex items-center mb-3 gap-2">
           <h3 className="text-xl font-bold text-grey-700">Customer Review</h3>
           <span className="font-normal">(12 Reviews)</span>
         </div>
 
-        <div className="text-gray-600 flex gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4 my-2">
+        <div className="text-gray-600 flex flex-col md:flex-row gap-4 md:gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4 my-2">
 
-          {/* Select Filter */}
           <div className="flex gap-2 items-center">
             <Select defaultValue="5">
               <SelectTrigger className="w-40">
@@ -310,9 +319,7 @@ export default function ServiceDetails() {
           </div>
 
         </div>
-
-
-        {/* Review Card */}
+        
         {Array(4).fill(0).map((_, i, arr) => (
           <div
             key={i}
@@ -346,7 +353,7 @@ export default function ServiceDetails() {
           <div className="flex-grow h-[1px] bg-gray-300"></div>
         </div>
 
-      </div>
+      </div> */}
 
       {/* Uncomment for service modal  */}
       {/* <ShowService/> */}
@@ -366,7 +373,19 @@ export default function ServiceDetails() {
           handleContinueBtnClick={updatePricing}  
           continueBtnText="Save"              
       /> 
-      <SetServiceDetails 
+      <AddServiceModal
+          info={{
+            service_details,
+            location,
+            service_category,
+            service_name
+          }} 
+          goBackAStep={() => setEditModals({ type: null })}
+          isOpen={editModals.type == 'service_details'}
+          hide={() => setEditModals({ type: null })}
+          handleContinueBtnClick={updateServiceDetails}  
+      />      
+      {/* <SetServiceDetails 
           info={{
             service_details
           }} 
@@ -375,7 +394,7 @@ export default function ServiceDetails() {
           hide={() => setEditModals({ type: null })}
           handleContinueBtnClick={updateServiceDetails}  
           continueBtnText="Save"              
-      />
+      /> */}
       <SetAvailability
           info={{
             ...availability

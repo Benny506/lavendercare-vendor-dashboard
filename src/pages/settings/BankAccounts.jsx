@@ -22,7 +22,7 @@ const BankAccounts = () => {
             </Button>
 
             {/* Modals  */}
-            <AddNewAccountModal />
+            {/* <AddNewAccountModal /> */}
             {/* <AccountAddedModal /> */}
         </div>
     );

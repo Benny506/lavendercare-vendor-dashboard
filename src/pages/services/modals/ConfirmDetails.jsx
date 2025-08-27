@@ -1,7 +1,7 @@
 import Modal from '@/components/Modal'
 import supabase from '@/database/dbInit'
 import { appLoadStart, appLoadStop } from '@/redux/slices/appLoadingSlice'
-import { getUserDetailsState } from '@/redux/slices/userDetailsSlice'
+import { getUserDetailsState, setUserDetails } from '@/redux/slices/userDetailsSlice'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
@@ -17,6 +17,7 @@ const ConfirmDetails = ({
   const dispatch = useDispatch()
 
   const profile = useSelector(state => getUserDetailsState(state).profile)
+  const services = useSelector(state => getUserDetailsState(state).services)
 
   const [apiReqs, setApiReqs] = useState({ isLoading: false, data: null, errorMsg: null })
 
@@ -52,9 +53,12 @@ const ConfirmDetails = ({
         throw new Error()
       }
 
+      const updatedServices = [...(services || []), data]
+
       setApiReqs({ isLoading: false, data: null, errorMsg: null })
 
       dispatch(appLoadStop())
+      dispatch(setUserDetails({ services: updatedServices }))
 
       handleContinueBtnClick()
 
@@ -116,6 +120,7 @@ const ConfirmDetails = ({
       secondaryButton="Check details"
       secondaryButtonFunc={goBackAStep}
       styles={{
+        wrapper: "max-w-xs md:max-w-md",
         image: "mt-10",
         description: "text-center text-grey-500 mt-2 mb-20",
         footer: "flex flex-col gap-3 mt-6 w-full",

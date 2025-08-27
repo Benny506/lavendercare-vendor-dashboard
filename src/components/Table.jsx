@@ -1,13 +1,14 @@
 import { Icon } from "@iconify/react";
 
 const Table = ({
-    columns,
+    columns=[],
     data,
     pagination,
     headerExtra,
     rowExtra,
     styles = {}
 }) => {
+
     return (
         <div className={`${styles.wrapper || "overflow-x-auto"}`}>
             <table className={`${styles.table || "w-full border-collapse"}`}>
@@ -92,7 +93,7 @@ const Table = ({
 
             {/* 🔹 Custom Pagination */}
             {pagination && (
-                <div className={`${styles.paginationWrapper || "mt-4"}`}>
+                <div className={`w-full flex-1${styles.paginationWrapper || "mt-4"}`}>
                     {pagination}
                 </div>
             )}

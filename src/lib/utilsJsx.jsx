@@ -51,11 +51,11 @@ export const bookingsMap = {
         color: "bg-success-50 text-success-500",
         feedBack: "This appointment is currently on-going"
     },
-    upcoming: {
+    new: {
         color: "bg-warning-50 text-warning-700",
         feedBack: "This appointment has been confirmed"
     },
-    attended: {
+    completed: {
         color: "bg-primary-50 text-primary-700",
         feedBack: "This appointment has been completed"
     },
@@ -78,6 +78,58 @@ export const getBookingStatusBadge = ({ status }) => {
         <div className='flex items-center justify-start'>
             <p
                 className={`${bookingsMap[status]?.color} text-xs rounded-lg px-3 py-1`}
+            >
+                { status }
+            </p>
+        </div>
+    )
+}
+
+
+
+
+
+// tickets 
+export const ticketsMap = {
+    low: {
+        color: "bg-success-50 text-success-600",
+    },
+    medium: {
+        color: "bg-warning-50 text-warning-700",
+    },
+    high: {
+        color: "bg-primary-50 text-primary-700",
+    },
+    critical: {
+        color: "bg-error-50 text-error-700",
+    }
+}
+export const getTicketPriorityBadge = ({ status }) => {
+    return (
+        <div className='flex items-center justify-start'>
+            <p
+                className={`${ticketsMap[status]?.color} text-xs rounded-lg px-3 py-1`}
+            >
+                { status }
+            </p>
+        </div>
+    )
+}
+
+export const ticketStatusMap = {
+    open: {
+        color: "bg-green-50 text-green-600"
+    },
+    closed: {
+        color: "bg-gray-100 text-gray-600"
+    }
+}
+
+export const getTicketStatusBadge = ({ status }) => {
+    return (
+        <div className='flex items-center justify-start'>
+            <p
+                className={`${ticketStatusMap[status]?.color} text-xs rounded-lg px-3 py-1`}
             >
                 { status }
             </p>
