@@ -1,13 +1,16 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Icon } from "@iconify/react";
-import { Check, CheckCheck, ClockFading, Menu, MessageCircleWarning, X } from "lucide-react";
+import { Check, CheckCheck, ClockFading, Menu, MessageCircleWarning, RotateCw, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useDirectChat } from "@/hooks/chatHooks/useDirectChat";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
 import { isoToAMPM } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify";
+import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
+import { sendNotifications } from "@/lib/notifications";
 
 export default function Chat({
     userInfo={},
@@ -15,9 +18,12 @@ export default function Chat({
     setSidebar=()=>{},
 }){
 
+    const dispatch = useDispatch()
+
     const profile = useSelector(state => getUserDetailsState(state).profile)
 
     const bottomRef = useRef(null)
+    const topRef = useRef(null)
 
     const [input, setInput] = useState("");    
 
@@ -26,7 +32,8 @@ export default function Chat({
     const topic = selectedChat?.id
 
     const {
-        sendMessage, messages, status, insertSubStatus, updateSubStatus, onlineUsers,
+        sendMessage, messages, status, insertSubStatus, updateSubStatus, onlineUsers, bulkMsgsRead,
+        loadMessages, canLoadMoreMsgs
     } = useDirectChat({ 
         topic,
         meId,
@@ -34,6 +41,45 @@ export default function Chat({
     })
 
     const peerOnline = onlineUsers.includes(peerId)
+
+    useEffect(() => {
+        if (messages?.length > 0) {
+            // flatListRef.current?.scrollToEnd({ animated: true });
+            bottomRef?.current?.scrollIntoView({ behaviour: 'smooth' })
+
+            handleReadUnreadMsgs()           
+        }
+    }, [messages]);
+
+    const handleReadUnreadMsgs = () => {
+        const unReadMsgsIds = (messages || [])?.filter(msg => (!msg?.read_at && msg?.to_user === meId)).map(msg => msg?.id)
+
+        bulkMsgsRead(unReadMsgsIds)        
+    }  
+    
+    const loadMoreMessages = async () => {
+        try {
+            dispatch(appLoadStart())
+
+            const lastMsg = messages[0]
+            const last_loaded_at = lastMsg?.created_at
+
+            await loadMessages({ msgLoadedTimeStamp: new Date().toISOString(), last_loaded_at, isOlder: true })
+
+            const scrollToTopDelay = setTimeout(() => {
+                // console.log("RUNNING")
+                topRef?.current?.scrollIntoView({ behaviour: 'smooth' })
+                clearTimeout(scrollToTopDelay)
+            }, 0)
+                        
+        } catch (error) {
+            console.warn(error)
+            toast.error('Error retrieving messages')
+
+        } finally{
+            dispatch(appLoadStop())
+        }
+    }      
 
     const updateStatusToAwaitingCompletion = async () => {
         try {
@@ -61,7 +107,30 @@ export default function Chat({
         if (!input.trim()) return;
         sendMessage({ text: input.trim(), toUser: peerId, bookingId: selectedChat?.id });
         setInput('');
-    };    
+    };   
+    
+    const notifyMother = async () => {
+        try {
+            dispatch(appLoadStart())
+
+            await sendNotifications({
+                tokens: [userInfo?.notification_token],
+                // sound: null,
+                title: `Incoming message from lavendercare vendor provider`,
+                body: `New message detected`,
+                data: {}
+            });    
+            
+            toast.success("Mother notified!")
+                        
+        } catch (error) {
+            console.log(error)
+            toast.error("Error notifying mother. Messages have been sent though, she can view them on her lavendercare app")
+        
+        } finally{
+            dispatch(appLoadStop())
+        }
+    }
 
     return(
         <div className="flex-1 flex flex-col">
@@ -97,6 +166,13 @@ export default function Chat({
                             </>
                     }
                 </div>
+
+                <button 
+                    onClick={notifyMother}
+                    className="text-sm bg-purple-600 hover:bg-purple-700 text-white cursor-pointer rounded-lg px-3 py-1"
+                >
+                    Notify mother
+                </button>
 
                 {/* 3-dot menu */}
                 {/* <div className="relative">
@@ -146,7 +222,21 @@ export default function Chat({
                         </p>
                     </div>
                 ) : (
-                        messages.map((msg) => {
+                        ['initial', ...messages].map((msg, i) => {
+
+                            if(msg === 'initial' && canLoadMoreMsgs){
+                                return (
+                                    <div
+                                        key={msg}
+                                        ref={topRef}
+                                        className="flex items-center justify-center my-2"
+                                    >
+                                        <div onClick={loadMoreMessages} className="cursor-pointer px-2 py-2 rounded-full bg-purple-600">
+                                            <RotateCw size={20} color="#FFF" />
+                                        </div>
+                                    </div>
+                                )
+                            }
 
                             const { message, from_user, pending, failed, created_at, read_at, delivered_at } = msg
 
@@ -156,7 +246,7 @@ export default function Chat({
                             const delivered = delivered_at ? true : false
 
                             return (
-                                <div key={msg.id} className={`flex ${iAmSender ? 'justify-end' : 'justify-start'}`}>
+                                <div key={i} className={`flex ${iAmSender ? 'justify-end' : 'justify-start'}`}>
                                     <div>
                                         <div className={`max-w-xs ${iAmSender
                                             ? 'bg-purple-600 text-white'
@@ -237,6 +327,7 @@ export default function Chat({
 
                 <div ref={bottomRef} />   
             </div>
+
 
             {/* Input bar */}
             {

@@ -20,15 +20,18 @@ import Table from "@/components/Table";
 import VerifyAccount from "./verification/VerifyAccount";
 import VerificationForm from "./verification/VerificationForm";
 import InProgress from "./verification/InProgress";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
 import { formatNumberWithCommas, getUniqueByKey, sortByKey } from "@/lib/utils";
 import { getBookingStatusBadge } from "@/lib/utilsJsx";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import supabase from "@/database/dbInit";
+import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
 
 function getMonthlyCounts(data) {
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   const counts = {};
 
@@ -47,15 +50,39 @@ function getMonthlyCounts(data) {
 
 
 export default function Dashboard() {
+  const dispatch = useDispatch()
 
   const navigate = useNavigate()
 
   const allBookings = useSelector(state => getUserDetailsState(state).bookings)
+  const profile = useSelector(state => getUserDetailsState(state).profile)
   const services = useSelector(state => getUserDetailsState(state).services)
 
-  const [bookingsCount, setBookingsCount] = useState({ thisMonth: 0, lastMonth: 0, newClientsCount: 0 })
+  const [bookingsCount, setBookingsCount] = useState({ thisMonth: 0, lastMonth: 0 })
   const [topServices, setTopServices] = useState([])
   const [bookings, setBookings] = useState([])
+  const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
+  const [totalBookingsCount, setTotalBookingsCount] = useState(0)
+  const [totalUsersBookedCount, setTotalUsersBookedCount] = useState(0)
+
+  useEffect(() => {
+    initialFetch()
+  }, [])
+
+  useEffect(() => {
+    const { isLoading, data } = apiReqs
+
+    if (isLoading) dispatch(appLoadStart());
+    else dispatch(appLoadStop())
+
+    if (isLoading && data) {
+      const { type } = data
+
+      if (type === 'initialFetch') {
+        handleInitialFetch()
+      }
+    }
+  }, [apiReqs])
 
   useEffect(() => {
     const now = new Date();
@@ -74,23 +101,19 @@ export default function Dashboard() {
 
     let thisMonthBookingsCount = 0
     let lastMonthBookingsCount = 0
-    const newClientsCount = getUniqueByKey({
-      arr: allBookings?.map(b => b?.user_profile),
-      key: 'id'
-    })?.length
 
     const servicesCount = {}
 
-    for(let i = 0; i < allBookings.length; i++){
+    for (let i = 0; i < allBookings.length; i++) {
       const b = allBookings[i]
       const d = new Date(b?.day)
       const s_id = b?.service_id
 
-      if(d.getMonth() === currentMonth && d.getFullYear() === currentYear){
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
         thisMonthBookingsCount += 1
       }
 
-      if(d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear){
+      if (d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear) {
         lastMonthBookingsCount += 1
       }
 
@@ -110,29 +133,72 @@ export default function Dashboard() {
           }
         }),
       key: 'count',
-      order: 'desc'                 
+      order: 'desc'
     })
 
     const _b = (allBookings || []).map(b => {
 
-        const service = (services || []).filter(s => s?.id == b?.service_id)[0]
+      const service = (services || []).filter(s => s?.id == b?.service_id)[0]
 
-        return {
-            ...b,
-            serviceInfo: service,
-        }
-    })    
+      return {
+        ...b,
+        serviceInfo: service,
+      }
+    })
 
     setBookings(_b)
 
     setTopServices(topServices.slice(0, 5))
-    
+
     setBookingsCount({
-      thisMonth: thisMonthBookingsCount, 
+      thisMonth: thisMonthBookingsCount,
       lastMonth: lastMonthBookingsCount,
-      newClientsCount
     })
   }, [allBookings, services])
+
+  const initialFetch = () => {
+    setApiReqs({
+      isLoading: true,
+      errorMsg: null,
+      data: {
+        type: 'initialFetch'
+      }
+    })
+  }
+
+  const handleInitialFetch = async () => {
+    try {
+
+      const { count: totalBookingCount, error: totalBookingCountError } = await supabase
+        .from("vendor_bookings")
+        .select("*", { count: "exact", head: true }) 
+        .eq("vendor_id", profile?.id);
+
+      const { data: totalUsersBookedCount, error: totalUsersBookedCountError } = await supabase
+        .rpc("get_unique_users_in_vendor_bookings", { v_id: profile?.id });
+
+      if (totalBookingCountError || totalUsersBookedCountError) {
+        console.error("totalBookingCountError", totalBookingCountError)
+        console.error("totalUsersBookedCountError", totalUsersBookedCountError)
+        throw new Error()
+      }
+
+      setTotalBookingsCount(totalBookingCount)
+      setTotalUsersBookedCount(totalUsersBookedCount)
+
+      setApiReqs({ isLoading: false, errorMsg: null, data: null })
+
+    } catch (error) {
+      console.log(error)
+      return initialFetchFailure({ errorMsg: 'Error loading dashboard data! Figures might be incorrect or outdated!' })
+    }
+  }
+  const initialFetchFailure = ({ errorMsg }) => {
+    setApiReqs({ isLoading: false, data: null, errorMsg })
+    toast.error(errorMsg)
+
+    return;
+  }
 
   // Table columns configuration for recent bookings
   const columns = [
@@ -146,7 +212,7 @@ export default function Dashboard() {
           {row.serviceInfo?.service_name}
         </span>
       ),
-    },    
+    },
     { key: "location", label: "Location" },
     {
       key: "status",
@@ -159,7 +225,7 @@ export default function Dashboard() {
       key: "action",
       label: "Actions",
       render: (row) => (
-        <button 
+        <button
           onClick={() => navigate('/bookings/booking', { state: { booking_id: row?.id } })}
           className="cursor-pointer bg-primary-600 text-white px-4 py-1 rounded-full text-sm"
         >
@@ -187,7 +253,7 @@ export default function Dashboard() {
               <div className="flex items-center mt-1">
                 <div className="flex items-center w-10 h-6 rounded-lg bg-success-50 justify-center">
                   <p className="text-center px-2 text-sm text-success-500">
-                    { bookingsCount.thisMonth >= bookingsCount.lastMonth ? '+' : '-' }{ Math.abs(bookingsCount.thisMonth - bookingsCount.lastMonth) }
+                    {bookingsCount.thisMonth >= bookingsCount.lastMonth ? '+' : '-'}{Math.abs(bookingsCount.thisMonth - bookingsCount.lastMonth)}
                   </p>
                 </div>
                 <p className="ml-2 text-sm font-bold">vs last month</p>
@@ -199,14 +265,14 @@ export default function Dashboard() {
 
           {bookings && bookings?.length > 0 ? (
             <div className="text-2xl font-bold my-3">
-              { formatNumberWithCommas(bookings?.length) }
+              {formatNumberWithCommas(totalBookingsCount)}
             </div>
           ) : (
             <div className="w-4 h-2 my-6 bg-black"></div>
           )}
 
           <hr className="bg-[#D2C3EF] h-0.5 border-none" />
-          <div 
+          <div
             onClick={() => navigate('/bookings')}
             className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer"
           >
@@ -228,9 +294,9 @@ export default function Dashboard() {
 
           <div className="text-sm text-gray-500 mt-2">Total Clients</div>
 
-          {bookingsCount?.newClientsCount && bookingsCount?.newClientsCount > 0 ? (
+          {totalUsersBookedCount > 0 ? (
             <div className="text-2xl font-bold my-3">
-              {bookingsCount?.newClientsCount}
+              { formatNumberWithCommas(totalUsersBookedCount) }
             </div>
           ) : (
             <div className="w-4 h-2 my-6 bg-black"></div>
@@ -249,7 +315,7 @@ export default function Dashboard() {
         <div className="bg-white shadow rounded-lg p-4 lg:col-span-2">
           <h2 className="text-sm font-medium text-gray-700 mb-3">Growth Chart</h2>
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart 
+            <LineChart
               data={getMonthlyCounts(bookings)}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -268,17 +334,17 @@ export default function Dashboard() {
 
         <div>
           <div className="flex font-bold w-full bg-white shadow rounded-lg p-4 pb-0 mb-3">
-            <div 
+            <div
               className={`flex-1 pb-2 px-3 text-grey-600 text-center`}
             >
               Top Locations && Services
-            </div>  
+            </div>
           </div>
 
           <ul className="text-sm text-gray-700 space-y-2 bg-white shadow rounded-lg p-4 pt-2">
             {
               topServices?.length > 0
-              ?
+                ?
                 topServices?.map((s, i) => {
                   const { info, count } = s
 
@@ -288,23 +354,23 @@ export default function Dashboard() {
                       className="flex flex-col justify-between px-2 border-b border-gray-200 pb-1 last:border-none"
                     >
                       <span className="font-bold text-gray-700 pt-1">
-                        {i + 1 < 10 ? `0${i+1}` : i+1}. { info?.service_name }
+                        {i + 1 < 10 ? `0${i + 1}` : i + 1}. {info?.service_name}
                       </span>
                       <span className="px-5 mt-1 text-gray-400">
                         {count} appointments
                       </span>
                       <span className="px-5 mt-1 text-gray-400">
                         At: {info?.location}
-                      </span>                      
-                    </li>                  
+                      </span>
+                    </li>
                   )
                 })
-              :
+                :
                 <div className="flex flex-col items-center justify-center py-22">
                   <p className="text-gray-500 text-xl font-medium">
                     No data to display
                   </p>
-                </div>                      
+                </div>
             }
           </ul>
         </div>
@@ -319,7 +385,7 @@ export default function Dashboard() {
               See your most recent bookings below
             </p>
           </div>
-          <button 
+          <button
             onClick={() => navigate('/bookings')}
             className="cursor-pointer text-primary-500 font-bold flex items-center gap-1"
           >

@@ -10,30 +10,55 @@ import ConfirmAppointmentSuccess from "./ConfirmAppointmentSuccess";
 import ConfirmAppointment from "./ConfirmAppointment";
 import CancelAppointmentSuccess from "./CancelAppointmentSuccess";
 import { bookingsMap, getBookingStatusBadge, getServiceStatusBadge } from "@/lib/utilsJsx";
-import { useSelector } from "react-redux";
-import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserDetailsState, setUserDetails } from "@/redux/slices/userDetailsSlice";
 import { usePagination } from "@/hooks/usePagination";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
+import { toast } from "react-toastify";
+import supabase from "@/database/dbInit";
+
+const LIMIT = 100
 
 const Bookings = () => {
+    const dispatch = useDispatch()
 
     const navigate = useNavigate()
 
     const allBookings = useSelector(state => getUserDetailsState(state).bookings)
     const services = useSelector(state => getUserDetailsState(state).services)
+    const profile = useSelector(state => getUserDetailsState(state).profile)
 
     const [filter, setFilter] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
     const [bookings, setBookings] = useState([])
-    const [pageListIndex, setPageListIndex] = useState(0)    
+    const [pageListIndex, setPageListIndex] = useState(0)
+    const [canLoadMore, setCanLoadMore] = useState(true)
     const [bookingsCount, setBookingsCount] = useState({
-        all: 0, total: 0, upcoming: 0, ongoing: 0, attended: 0, missed: 0, cancelled: 0
+        all: 0, total: 0, ongoing: 0, completed: 0, missed: 0, cancelled: 0, awaiting_completion: 0
     })
+    const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
+
+    useEffect(() => {
+        const { isLoading, data } = apiReqs
+
+        if (isLoading) dispatch(appLoadStart());
+        else dispatch(appLoadStop());
+
+        if (isLoading && data) {
+            const { type } = data
+
+            if (type === 'loadMoreBookings') {
+                loadMoreBookings()
+            }
+        }
+    }, [apiReqs])
 
     useEffect(() => {
         const countObj = {
-            all: 0, upcoming: 0, ongoing: 0, attended: 0, missed: 0, cancelled: 0
+            all: 0, ongoing: 0, completed: 0, missed: 0, cancelled: 0, awaiting_completion: 0
         }
 
         const _b = (allBookings || []).map(b => {
@@ -48,7 +73,6 @@ const Bookings = () => {
             return {
                 ...b,
                 serviceInfo: service,
-                location: 'Dummy location'
             }
         })
 
@@ -59,18 +83,65 @@ const Bookings = () => {
         setBookingsCount(countObj)
     }, allBookings, services)
 
+    const loadMoreBookings = async () => {
+        try {
+
+            const limit = LIMIT;
+            const from = (allBookings?.length || 0); // start from current length
+            const to = from + limit - 1;
+
+            const { data, error } = await supabase
+                .from('vendor_bookings')
+                .select(`
+                    *,
+                    user_profile: user_profiles(*) 
+                `)
+                .eq('vendor_id', profile?.id)
+                .order("day", { ascending: true, nullsFirst: false })
+                .order('start_hour', { ascending: true, nullsFirst: false })
+                .limit(limit)
+                .range(from, to);
+
+            if (error) {
+                console.warn(error)
+                throw new Error()
+            }
+
+            if (data.length === 0) {
+                setCanLoadMore(false)
+                toast.info("All bookings loaded")
+            }
+
+            dispatch(setUserDetails({
+                bookings: [...(allBookings || []), ...data]
+            }))
+
+            setApiReqs({ isLoading: false, errorMsg: null, data: null })
+
+        } catch (error) {
+            console.error(error)
+            return loadMoreBookingsFailure({ errorMsg: 'Something went wrong! Try again.' })
+        }
+    }
+    const loadMoreBookingsFailure = ({ errorMsg }) => {
+        setApiReqs({ isLoading: false, errorMsg, data: null })
+        toast.error(errorMsg)
+
+        return;
+    }
+
     // Table Columns
     const columns = [
         { key: "id", label: "Booking Number" },
         { key: "day", label: "Booking Date" },
-        { 
-            key: "service_name", 
+        {
+            key: "service_name",
             label: "Service Booked",
             render: (row) => (
                 <span>
-                    { row?.serviceInfo?.service_name }
+                    {row?.serviceInfo?.service_name}
                 </span>
-            ),            
+            ),
         },
         { key: "location", label: "Location" },
         {
@@ -84,7 +155,7 @@ const Bookings = () => {
             key: "action",
             label: "Action",
             render: (row) => (
-                <button 
+                <button
                     onClick={() => navigate('/bookings/booking', { state: { booking_id: row?.id } })}
                     className="cursor-pointer px-4 py-1 text-sm bg-primary-500 text-grey-50 rounded-4xl"
                 >
@@ -102,16 +173,16 @@ const Bookings = () => {
 
             const { service_name } = serviceInfo
 
-            const matchSearch = 
+            const matchSearch =
                 (searchTerm.toLowerCase().includes(service_name?.toLowerCase())
-                ||
-                service_name.toLowerCase().includes(searchTerm?.toLowerCase()))
+                    ||
+                    service_name.toLowerCase().includes(searchTerm?.toLowerCase()))
 
                 ||
 
                 (searchTerm.toLowerCase().includes(id?.toLowerCase())
-                ||
-                id.toLowerCase().includes(searchTerm?.toLowerCase()))
+                    ||
+                    id.toLowerCase().includes(searchTerm?.toLowerCase()))
 
             const matchesFilter = (filter?.toLowerCase() === "all" || item.status === filter)
 
@@ -128,26 +199,26 @@ const Bookings = () => {
     });
 
     const incrementPageListIndex = () => {
-        if(pageListIndex === totalPageListIndex){
+        if (pageListIndex === totalPageListIndex) {
             setPageListIndex(0)
-         
-        } else{
-            setPageListIndex(prev => prev+1)
+
+        } else {
+            setPageListIndex(prev => prev + 1)
         }
 
         return
     }
 
     const decrementPageListIndex = () => {
-        if(pageListIndex == 0){
+        if (pageListIndex == 0) {
             setPageListIndex(totalPageListIndex)
-        
-        } else{
-            setPageListIndex(prev => prev-1)
+
+        } else {
+            setPageListIndex(prev => prev - 1)
         }
 
         return
-    }    
+    }
 
     return (
         <div className="mt-4">
@@ -172,7 +243,7 @@ const Bookings = () => {
                                     {
                                         status != 'all'
                                         &&
-                                            <Icon icon={'uil:calender'} className={`text-xl ${iconColor}`} />
+                                        <Icon icon={'uil:calender'} className={`text-xl ${iconColor}`} />
                                     }
                                     <p className="text-sm text-grey-600 capitalize">{status}</p>
                                 </div>
@@ -240,66 +311,67 @@ const Bookings = () => {
                             {
                                 pageItems.length > 0
                                 &&
-                                    <div className="mt-6 flex items-center justify-between">
-                                        <button 
-                                            disabled={pageListIndex > 0 ? false : true}
-                                            onClick={decrementPageListIndex} 
-                                            style={{
-                                                opacity: pageListIndex > 0 ? 1 : 0.5
-                                            }}
-                                            className="cursor-not-allowed flex items-center text-gray-600 hover:text-gray-800 font-bold"
-                                        >
-                                            <Icon icon="mdi:arrow-left" className="mr-2" /> 
-                                            <span className="hidden md:inline">Previous</span>
-                                        </button>                        
+                                <div className="mt-6 flex items-center justify-between">
+                                    <button
+                                        disabled={pageListIndex > 0 ? false : true}
+                                        onClick={decrementPageListIndex}
+                                        style={{
+                                            opacity: pageListIndex > 0 ? 1 : 0.5
+                                        }}
+                                        className="cursor-not-allowed flex items-center text-gray-600 hover:text-gray-800 font-bold"
+                                    >
+                                        <Icon icon="mdi:arrow-left" className="mr-2" />
+                                        <span className="hidden md:inline">Previous</span>
+                                    </button>
 
-                                        <div className="flex flex-wrap justify-center gap-2">
-                                            {pageList?.map((p, i) => {
+                                    <div className="flex flex-wrap justify-center gap-2">
+                                        {pageList?.map((p, i) => {
 
-                                                const isActivePAge = p-1 === currentPage
+                                            const isActivePAge = p - 1 === currentPage
 
-                                                const handlePClick = () => {
-                                                    if (p === '...'){
-                                                        
-                                                        if(i == 0){
-                                                            decrementPageListIndex()
-                                                        
-                                                        } else{
-                                                            incrementPageListIndex()
-                                                        }
+                                            const handlePClick = () => {
+                                                if (p === '...') {
 
-                                                        return;
+                                                    if (i == 0) {
+                                                        decrementPageListIndex()
+
+                                                    } else {
+                                                        incrementPageListIndex()
                                                     }
-
-                                                    setCurrentPage(p-1)
 
                                                     return;
                                                 }
 
-                                                return (
-                                                    <button
-                                                        key={i}
-                                                        onClick={handlePClick}
-                                                        className={`w-8 h-8 cursor-pointer rounded-full ${isActivePAge ? "bg-primary-100 text-primary-600" : "text-gray-600"} flex items-center justify-center`}
-                                                    >
-                                                        {p}
-                                                    </button>
-                                                )}
-                                            )}
-                                        </div>
-                                        <button 
-                                            disabled={pageListIndex < totalPageListIndex ? false : true}
-                                            onClick={incrementPageListIndex} 
-                                            style={{
-                                                opacity: pageListIndex < totalPageListIndex ? 1 : 0.5
-                                            }}
-                                            className="cursor-pointer flex items-center text-gray-600 hover:text-gray-800 font-bold"
-                                        >
-                                            <span className="hidden md:inline">Next</span> <Icon icon="mdi:arrow-right" className="ml-2" />
-                                        </button>                        
-                                    </div>                    
+                                                setCurrentPage(p - 1)
+
+                                                return;
+                                            }
+
+                                            return (
+                                                <button
+                                                    key={i}
+                                                    onClick={handlePClick}
+                                                    className={`w-8 h-8 cursor-pointer rounded-full ${isActivePAge ? "bg-primary-100 text-primary-600" : "text-gray-600"} flex items-center justify-center`}
+                                                >
+                                                    {p}
+                                                </button>
+                                            )
+                                        }
+                                        )}
+                                    </div>
+                                    <button
+                                        disabled={pageListIndex < totalPageListIndex ? false : true}
+                                        onClick={incrementPageListIndex}
+                                        style={{
+                                            opacity: pageListIndex < totalPageListIndex ? 1 : 0.5
+                                        }}
+                                        className="cursor-pointer flex items-center text-gray-600 hover:text-gray-800 font-bold"
+                                    >
+                                        <span className="hidden md:inline">Next</span> <Icon icon="mdi:arrow-right" className="ml-2" />
+                                    </button>
+                                </div>
                             }
-                        </>                        
+                        </>
                         // <Pagination
                         //     currentPage={currentPage}
                         //     totalPages={totalPages}
@@ -307,6 +379,27 @@ const Bookings = () => {
                         // />
                     }
                 />
+
+                {
+                    canLoadMore
+                    &&
+                    <div className="w-full flex items-center justify-center my-5">
+                        <Button
+                            onClick={() => {
+                                setApiReqs({
+                                    isLoading: true,
+                                    errorMsg: null,
+                                    data: {
+                                        type: 'loadMoreBookings'
+                                    }
+                                })
+                            }}
+                            className={'bg-purple-600 text-white'}
+                        >
+                            Load more
+                        </Button>
+                    </div>
+                }
             </div>
 
             {/* Modals (uncomment to activate) */}

@@ -24,6 +24,7 @@ import { getUserDetailsState, setUserDetails } from "@/redux/slices/userDetailsS
 import SetServiceDetails from "./modals/SetServiceDetails";
 import SetAvailability from "./modals/SetAvailability";
 import AddServiceModal from "./modals/AddServiceModal";
+import DuplicateService from "./modals/DuplicateService";
 
 export default function ServiceDetails() {
   const dispatch = useDispatch()
@@ -71,8 +72,47 @@ export default function ServiceDetails() {
       if(type == 'editService'){
         editService({ requestInfo })
       }
+
+      if(type === 'duplicateService'){
+        duplicateService({ requestInfo })
+      }
     }
   }, [apiReqs])
+
+    const duplicateService = async ({ requestInfo }) => {
+    try {
+
+      const { data, error } = await supabase
+        .from('vendor_services')
+        .insert(requestInfo)
+        .select()
+        .single()
+
+      if(error){
+        console.log(error)
+        throw new Error()
+      }
+
+      const updatedServices = [...(services || []), data]
+
+      setApiReqs({ isLoading: false, data: null, errorMsg: null })
+
+      dispatch(appLoadStop())
+      dispatch(setUserDetails({ services: updatedServices }))
+
+      toast.success("Service duplicated with different location")
+      
+    } catch (error) {
+      console.log(error)
+      return duplicateServiceFailure({ errorMsg: 'Something went wrong! Try again' })
+    }
+  }
+  const duplicateServiceFailure = ({ errorMsg }) => {
+    setApiReqs({ isLoading: false, errorMsg, data: null })
+    toast.error(errorMsg)
+
+    return;
+  }
 
   const editService = async ({ requestInfo }) => {
     try {
@@ -124,7 +164,7 @@ export default function ServiceDetails() {
   if(!service) return <></>
 
   const { id, service_name, availability, pricing_type, currency, amount,
-    status, service_category, service_details, location
+    status, service_category, service_details, location, country, city
    } = service
 
 
@@ -201,7 +241,7 @@ export default function ServiceDetails() {
   return (
     <div className="w-full py-4 md:py-6 px-0 md:px-6 min-h-screen">
       {/* Back Button */}
-      <div className="flex items-center justify-between gap-4 md:gap-0 mb-4 md:mb-0">
+      <div className="flex flex-wrap items-center justify-between gap-4 md:gap-0 mb-4 md:mb-0">
         <button
           type="button"
           className="flex items-center gap-2 mb-6 text-primary-600 cursor-pointer"
@@ -213,10 +253,23 @@ export default function ServiceDetails() {
           <span className="font-semibold md:text-lg text-sm">Back to Services</span>
         </button>
 
-        <Button onClick={() => setEditModals({ type: 'availability' })} className="bg-success-500 rounded-4xl py-6 px-5 text-white">
-          <Icon icon="mdi:edit-outline" width="30" height="30" />
-          Edit Availability
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button  
+            onClick={() => setEditModals({ type: 'duplicate_service' })}
+            className="bg-purple-600 rounded-4xl py-6 px-5 text-white"
+          >
+            Duplicate in another location
+          </Button>
+
+          <Button onClick={() => setEditModals({ type: 'availability' })} className="bg-success-500 rounded-4xl py-6 px-5 text-white">
+            <Icon icon="mdi:edit-outline" width="30" height="30" />
+            Edit Availability
+          </Button>
+
+          <Button onClick={() => setEditModals({ type: 'hide_service' })} className="bg-red-700 rounded-4xl py-6 px-5 text-white">
+            { service?.status === 'hidden' ? 'Delete' : 'Hide' }
+          </Button>          
+        </div>
 
         {/* Edit Availabity Modals  */}
         {/* <ConfirmChanges /> */}
@@ -274,10 +327,21 @@ export default function ServiceDetails() {
         </div>
         
         <ul className="list-disc list-inside text-gray-600 flex flex-col gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4">
-          <li> 
+          <li style={{
+            listStyleType: 'none'
+          }}> 
             { service_details } 
           </li>
-          <li>
+          <li className="capitalize">
+            Country: { country?.replaceAll("_", " ") }
+          </li>          
+          <li className="capitalize">
+            State: { service?.state?.replaceAll("_", " ") }
+          </li> 
+          <li className="capitalize">
+            City: { city?.replaceAll("_", " ") }
+          </li>                                       
+          <li className="capitalize">
             Location: { location }
           </li>
         </ul>      
@@ -360,7 +424,11 @@ export default function ServiceDetails() {
       {/* <ShowServiceSuccess /> */}
 
       {/* Uncomment for service modal  */}
-      {/* <HideService /> */}
+      <HideService 
+        service={service}
+        isOpen={editModals?.type === 'hide_service'}
+        hide={() => setEditModals({ type: null })}
+      />
       {/* <HideServiceSuccess /> */}
 
       <SetPricing 
@@ -378,7 +446,10 @@ export default function ServiceDetails() {
             service_details,
             location,
             service_category,
-            service_name
+            service_name,
+            country,
+            city,
+            state: service?.state
           }} 
           goBackAStep={() => setEditModals({ type: null })}
           isOpen={editModals.type == 'service_details'}
@@ -404,6 +475,30 @@ export default function ServiceDetails() {
           goBackAStep={() => setEditModals({ type: null })}        
           handleContinueBtnClick={updateAvailability}   
           continueBtnText="Save"                   
+      />
+
+      <DuplicateService 
+          isOpen={editModals.type == 'duplicate_service'}
+          hide={() => setEditModals({ type: null })}
+          handleContinueBtnClick={(args) => {
+            const requestInfo = {
+              ...service,
+              ...args,
+              status: 'pending'
+            }
+
+            delete requestInfo?.id
+            delete requestInfo?.created_at
+
+            setApiReqs({
+              isLoading: true,
+              errorMsg: null,
+              data: {
+                type: 'duplicateService',
+                requestInfo
+              }
+            })
+          }}        
       />                  
     </div>
   );

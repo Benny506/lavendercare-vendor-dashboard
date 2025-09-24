@@ -8,103 +8,108 @@ import { useDispatch, useSelector } from "react-redux";
 import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
 import { toast } from "react-toastify";
 import supabase from "@/database/dbInit";
-import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
+import { getUserDetailsState, setUserDetails } from "@/redux/slices/userDetailsSlice";
 import { formatNumberWithCommas, removeDuplicates, removeDuplicatesWithCount } from "@/lib/utils";
 import Chat from "./Chat";
+import { Button } from "@/components/ui/button";
+
+const LIMIT = 100
 
 const Inbox = () => {
     const dispatch = useDispatch()
 
     const bookings = useSelector(state => getUserDetailsState(state).bookings)
+    const profile = useSelector(state => getUserDetailsState(state).profile)
 
     const [clients, setClients] = useState([])
     const [apiReqs, setApiReqs] = useState({ isLoading: false, data: null, errorMsg: null })
-    const [showMenu, setShowMenu] = useState(false);
+    // const [showMenu, setShowMenu] = useState(false);
     const [activeChat, setActiveChat] = useState();
     const [activeUser, setActiveUser] = useState()
     const [Sidebar, setSidebar] = useState(false);
+    const [canLoadMore, setCanLoadMore] = useState(true)
 
     useEffect(() => {
-        const { unique, counts } = removeDuplicatesWithCount((bookings || []).map(b => b?.user_profile?.id))
+        const { unique } = removeDuplicatesWithCount({ arr: (bookings || [])?.map(b => b?.user_profile), key: 'id' })
 
-        setApiReqs({
-            isLoading: true,
-            errorMsg: null,
-            data: {
-                type: 'fetchClients',
-                requestInfo: {
-                    userIds: unique,
-                    counts
-                }
-            }
-        })
-    }, [])
+        setClients(unique)
+    }, [bookings])
 
     useEffect(() => {
         const { isLoading, data } = apiReqs
 
-        if(isLoading) dispatch(appLoadStart());
+        if (isLoading) dispatch(appLoadStart());
         else dispatch(appLoadStop());
 
-        if(isLoading && data){
+        if (isLoading && data) {
             const { type, requestInfo } = data
 
-            if(type == 'fetchClients'){
-                fetchClients({ requestInfo })
+            if (type == 'loadMoreBookings') {
+                loadMoreBookings()
             }
         }
     }, [apiReqs])
 
     useEffect(() => {
-        if(activeUser){
+        if (activeUser) {
             const userChat = (bookings || []).filter(b => b?.user_profile?.id == activeUser?.id)[0]
 
-            if(!userChat){
+            if (!userChat) {
                 toast.info("Error loading chats with this user. Try again, if the issue persists, contact support")
-            
-            } else{
+
+            } else {
                 setActiveChat(userChat)
             }
         }
     }, [activeUser])
 
-    const fetchClients = async ({ requestInfo }) => {
+    const loadMoreBookings = async () => {
         try {
 
-            const { userIds, counts } = requestInfo
+            const limit = LIMIT;
+            const from = (bookings?.length || 0); // start from current length
+            const to = from + limit - 1;
 
             const { data, error } = await supabase
-                .from('user_profiles')
-                .select("*")
-                .in('id', userIds)
-            
-            if(error){
-                console.log(error)
+                .from('vendor_bookings')
+                .select(`
+                    *,
+                    user_profile: user_profiles(*) 
+                `)
+                .eq('vendor_id', profile?.id)
+                .order("day", { ascending: true, nullsFirst: false })
+                .order('start_hour', { ascending: true, nullsFirst: false })
+                .limit(limit)
+                .range(from, to);
+
+            if (error) {
+                console.warn(error)
                 throw new Error()
             }
 
-            setClients(data?.map(d => {
-                return {
-                    ...d,
-                    numBookings: counts[d?.id]
-                }
+            if (data.length === 0) {
+                setCanLoadMore(false)
+                toast.info("All users loaded")
+            }
+
+            dispatch(setUserDetails({
+                bookings: [...(bookings || []), ...data]
             }))
 
             setApiReqs({ isLoading: false, errorMsg: null, data: null })
 
-            return;
-            
         } catch (error) {
-            console.log(error)
-            return fetchClientsFailure({ errorMsg: 'Something went wrong! Try again' })
+            console.error(error)
+            return loadMoreBookingsFailure({ errorMsg: 'Something went wrong! Try again.' })
         }
     }
-    const fetchClientsFailure = ({ errorMsg }) => {
+    const loadMoreBookingsFailure = ({ errorMsg }) => {
         setApiReqs({ isLoading: false, errorMsg, data: null })
         toast.error(errorMsg)
 
         return;
     }
+
 
     return (
         <div className="flex lg:h-screen">
@@ -152,50 +157,72 @@ const Inbox = () => {
                             onClick={handleClientClick}
                             className="flex flex-col md:flex-row gap-2 border-b border-grey-200 pb-4 p-2 w-full cursor-pointer"
                         >
-                            <img 
+                            <img
                                 className="border-primary-400 border-2 rounded-full h-12 w-12"
                                 src={profile_img || "https://res.cloudinary.com/dqcmfizfd/image/upload/v1756168978/testing/mother-family-mom-svgrepo-com_uz0o5c.png"}
                                 alt={profile_img ? "Profile image" : "Dummy profile"}
                             />
                             <div className="flex flex-col flex-1">
-                                <p className="text-grey-800 font-medium">{ name }</p>
+                                <p className="text-grey-800 font-medium">{name}</p>
                                 <p className="text-grey-500 text-sm truncate capitalize">
-                                    { country } { state }
+                                    {country} {state}
                                 </p>
                             </div>
                             {
                                 numBookings > 0
                                 &&
-                                    <div className="flex md:flex-col flex-row items-end gap-1">
-                                        {/* <p className="text-[13px]">4:00 AM</p> */}
-                                        <div className="flex gap-1.5 items-center">
-                                            {/* <Icon
+                                <div className="flex md:flex-col flex-row items-end gap-1">
+                                    {/* <p className="text-[13px]">4:00 AM</p> */}
+                                    <div className="flex gap-1.5 items-center">
+                                        {/* <Icon
                                                 icon="mi:notification-off"
                                                 width="20"
                                                 height="20"
                                                 className="text-grey-500"
                                             /> */}
-                                            <span className="rounded-full bg-primary-100 text-primary-500 px-2 text-sm">
-                                                { formatNumberWithCommas(numBookings) } booking{numBookings > 1 ? 's' : ''}
-                                            </span>
-                                        </div>
-                                    </div>                                
+                                        <span className="rounded-full bg-primary-100 text-primary-500 px-2 text-sm">
+                                            {formatNumberWithCommas(numBookings)} booking{numBookings > 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                </div>
                             }
                         </div>
-                    )}
+                    )
+                }
                 )}
+
+                {
+                    canLoadMore
+                    &&
+                        <div className="flex items-center justify-center">
+                            <Button
+                                className={'bg-purple-600'}
+                                onClick={() => {
+                                    setApiReqs({
+                                        isLoading: true,
+                                        errorMsg: null,
+                                        data: {
+                                            type: 'loadMoreBookings'
+                                        }
+                                    })
+                                }}
+                            >
+                                Load more
+                            </Button>
+                        </div>
+                }
             </div>
 
             {
                 !activeChat || !activeUser
-                ?
+                    ?
                     <div className="flex-1 flex flex-col mt-4">
                         <button
                             onClick={() => setSidebar(true)}
                             className="lg:hidden cursor-pointer"
                         >
                             <Menu size={24} />
-                        </button>                        
+                        </button>
                         <div className="flex flex-col items-center justify-center h-full text-grey-400">
                             <Icon
                                 icon="mdi:message-text-outline"
@@ -206,14 +233,14 @@ const Inbox = () => {
                             <p className="text-sm text-grey-500 text-center">
                                 Select a chat from the menu
                             </p>
-                        </div>     
+                        </div>
                     </div>
-                :           
-                    <Chat 
+                    :
+                    <Chat
                         setSidebar={setSidebar}
                         userInfo={activeUser}
                         selectedChat={activeChat}
-                    />                
+                    />
             }
             {/* Delete modal  */}
             {/* <DeleteMessage /> */}

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "formik";
 import { Link } from "react-router-dom";
 import ErrorMsg1 from "./ErrorMsg1";
+import Image from "./ui/image";
 
 const AuthForm = ({
     image,
@@ -26,7 +27,7 @@ const AuthForm = ({
         >
             {image && (
                 <div className={`${styles.imageWrapper || "flex justify-center mb-4"}`}>
-                    <img src={image} alt="illustration" className={styles.image || "w-20 h-20"} />
+                    <Image src={image} alt="illustration" className={styles.image || "w-20 h-20"} />
                 </div>
             )}
 
@@ -79,6 +80,8 @@ const AuthForm = ({
                                         ))}
                                     </select>
                                 :
+                                field?.name && field?.type
+                                &&
                                     <input
                                         name={field.name}
                                         type={field.type}

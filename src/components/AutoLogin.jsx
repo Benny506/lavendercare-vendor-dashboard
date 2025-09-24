@@ -11,6 +11,7 @@ export default function AutoLogin({ children }){
     const navigate = useNavigate()
 
     const [user, setUser] = useState(null)
+    const [session, setSession] = useState(null)
     const [appLoading, setAppLoading] = useState(true)
 
     // 1. Restore session & subscribe to auth changes
@@ -18,6 +19,7 @@ export default function AutoLogin({ children }){
         supabase.auth.getSession().then(({ data: { session } }) => {
             if(session?.user){
                 setUser(session?.user)
+                setSession(session)
             
             } else{
                 autoLoginError()
@@ -36,7 +38,7 @@ export default function AutoLogin({ children }){
 
     // 2. Fetch related data once we have the user
     useEffect(() => {
-        if (!user) return;
+        if (!user || !session) return;
 
         // console.log(user)
 
@@ -50,15 +52,15 @@ export default function AutoLogin({ children }){
 
             } else {
 
-                const { profile, services, bookings } = infoData
+                const { profile, services, bookings, phone_number } = infoData
 
                 dispatch(setUserDetails({
-                    profile: {
-                        ...user,
-                        ...profile
-                    },
+                    user,
+                    session,
+                    profile,
                     services,
-                    bookings
+                    bookings,
+                    phone_number
                 }))
 
                 setAppLoading(false)

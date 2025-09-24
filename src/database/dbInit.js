@@ -38,9 +38,8 @@ export async function vendorLogin({ email, password }) {
 
   return {
     data: {
-      profile: {
-        ...data, ...infoData?.profile
-      },
+      session: data?.session,
+      user: data.user,
       ...infoData      
     },
     errorMsg: null
@@ -53,10 +52,16 @@ export async function getVendorDetails({ id }){
     .eq('id', id) 
     .single(); 
 
+  const { data: phone_number, error: phone_number_error } = await supabase
+    .from('unique_phones')
+    .select('*')
+    .eq('user_id', id)
+
   const { data: vendorServicesData, error: vendorServicesError } = await supabase
     .from('vendor_services')
     .select('*')
     .eq('vendor_id', id) 
+    .limit(1000) 
 
   const { data: bookingsData, error: bookingsError } = await supabase
     .from('vendor_bookings')
@@ -67,7 +72,7 @@ export async function getVendorDetails({ id }){
     .eq('vendor_id', id)
     .order("day", { ascending: true, nullsFirst: false })      
     .order('start_hour', { ascending: true, nullsFirst: false })
-    .limit(100)    
+    .limit(1000)    
 
   if(
       profileError
@@ -75,10 +80,13 @@ export async function getVendorDetails({ id }){
       vendorServicesError
       ||
       bookingsError
+      ||
+      phone_number_error
     ){
     console.log("Profile error", profileError)
     console.log("Vendor services error", vendorServicesError)
     console.log("Bookings error", bookingsError)
+    console.log("Phone number error", phone_number_error)
     return { error: "Error getting vendor profile", data: null };
   }
 
@@ -86,7 +94,8 @@ export async function getVendorDetails({ id }){
     data: {
       profile: profileData,
       services: vendorServicesData,
-      bookings: bookingsData
+      bookings: bookingsData,
+      phone_number: phone_number[0]
     },
     error: null
   }

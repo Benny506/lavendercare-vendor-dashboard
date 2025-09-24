@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react";
 import React from "react";
+import Image from "./ui/image";
 
 export default function Modal({
     image,
@@ -37,7 +38,7 @@ export default function Modal({
                     {/* Image/Icon */}
                     {image && (
                         <div className={`${styles.imageWrapper || "flex justify-center mb-4"}`}>
-                            <img
+                            <Image
                                 src={image}
                                 alt="icon"
                                 className={`${styles.image || "w-20 h-20"}`}

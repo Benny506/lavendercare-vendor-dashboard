@@ -18,19 +18,29 @@ import SetPricing from "./modals/SetPricing";
 import SetAvailability from "./modals/SetAvailability";
 import ConfirmDetails from "./modals/ConfirmDetails";
 import ReviewInProgress from "./modals/ReviewInProgress";
-import { useSelector } from "react-redux";
-import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserDetailsState, setUserDetails } from "@/redux/slices/userDetailsSlice";
 import { formatNumberWithCommas } from "@/lib/utils";
 import { getServiceStatusBadge } from '@/lib/utilsJsx'
 import { useNavigate } from "react-router-dom";
+import { Dot } from "lucide-react";
+import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
+import { toast } from "react-toastify";
+import supabase from "@/database/dbInit";
+
+
+const LIMIT = 100
+
 
 export default function Services() {
+    const dispatch = useDispatch()
 
     const navigate = useNavigate()
 
     const [filter, setFilter] = useState("all");
 
     const services = useSelector(state => getUserDetailsState(state).services)
+    const profile = useSelector(state => getUserDetailsState(state).profile)
 
     const [newService, setNewService] = useState({
         step: null, details: {}
@@ -39,6 +49,23 @@ export default function Services() {
         active: 0, inActive: 0
     })
     const [searchFilter, setSearchFilter] = useState('')
+    const [canLoadMore, setCanLoadMore] = useState(true)
+    const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
+
+    useEffect(() => {
+        const { isLoading, data } = apiReqs
+
+        if(isLoading) dispatch(appLoadStart());
+        else dispatch(appLoadStop());
+
+        if(isLoading && data){
+            const { type } = data
+
+            if(type === 'loadMoreServices'){
+                loadMoreServices()
+            }
+        }
+    }, [apiReqs])
 
     useEffect(() => {
 
@@ -51,7 +78,7 @@ export default function Services() {
             if(myServices[i]){
                 const { status } = myServices[i]
 
-                if(status === 'active'){
+                if(status === 'approved'){
                     active = active + 1
                 
                 } else{
@@ -64,6 +91,60 @@ export default function Services() {
             active, inActive
         })
     }, [services])
+
+    const loadMoreServices = async () => {
+        try {
+
+            setCanLoadMore(true)
+
+            const limit = LIMIT;
+            const from = (services?.length || 0); // start from current length
+            const to = from + limit - 1;
+
+            const { data, error } = await supabase
+                .from('vendor_services')
+                .select('*')
+                .eq('vendor_id', profile?.id) 
+                .limit(limit)
+                .range(from, to) 
+
+            if(error){
+                console.warn(error)
+                throw new Error()
+            }
+                
+            if (data.length === 0) {
+                setCanLoadMore(false)
+                toast.info("All services loaded")
+            }
+
+            dispatch(setUserDetails({
+                services: [...(services || []), ...data]
+            }))
+            
+            setApiReqs({ isLoading: false, errorMsg: null, data: null })
+            
+        } catch (error) {
+            console.log(error)
+            return loadMoreServicesFailure({ errorMsg: 'Something went wrong! Try again.' })
+        }
+    }
+    const loadMoreServicesFailure = ({ errorMsg }) => {
+        setApiReqs({ isLoading: false, errorMsg, data: null })
+        toast.error(errorMsg)
+
+        return;
+    }
+
+    const handleLoadMore = () => {
+        setApiReqs({
+            isLoading: true,
+            errorMsg: null,
+            data: {
+                type: 'loadMoreServices'
+            }
+        })
+    }
 
     const filteredServices = (services || []).filter(service => {
 
@@ -194,62 +275,92 @@ export default function Services() {
 
                 {/* Service Cards */}
                 {filteredServices && filteredServices.length > 0 ? (
-                    <div className="flex flex-wrap p-4 justify-between">
-                        {filteredServices.map((service, i) => {
-                            
-                            const { service_name, service_category, pricing_type,
-                                amount, status, currency
-                              } = service
+                    <div className="">
+                        <div className="flex flex-wrap p-4 justify-between">
+                            {filteredServices.map((service, i) => {
+                                
+                                const { service_name, service_category, pricing_type,
+                                    amount, status, currency, country, state, city, location
+                                } = service
 
-                            return (
-                                <div
-                                    key={service?.id}
-                                    className={`lg:w-1/2 w-full lg:mb-0 mb-2 ${i+1%2===0 ? 'pl-2' : 'pr-2'}`}
-                                >
+                                return (
                                     <div
-                                        className="w-full bg-white border rounded-xl p-4 space-y-4"
+                                        key={service?.id}
+                                        className={`lg:w-1/2 w-full lg:mb-2 mb-2 ${i+1%2===0 ? 'pl-2' : 'pr-2'}`}
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <p className="font-semibold">{service_name}</p>
+                                        <div
+                                            className="w-full bg-white border rounded-xl p-4 space-y-4"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <p className="font-semibold">{service_name}</p>
+
+                                                <div className="flex gap-2">
+                                                    <Badge variant="outline" className='font-bold text-grey-700 bg-grey-100 border-none py-1 px-2 rounded-2xl'>
+                                                        {service_category?.replaceAll("_", " ")}
+                                                    </Badge>                                            
+                                                </div>
+                                            </div>
+
+                                            <p className="text-sm text-grey-700 font-medium">
+                                                {pricing_type} Price: {currency} {formatNumberWithCommas(amount)}
+                                            </p>
+
+                                            <div className="flex items-center flex-wrap gap-1">
+                                                {
+                                                    [country, state, city, location].map((s, i) => {
+                                                        return(
+                                                            <div className="flex items-center gap-1">
+                                                                <Dot size={20} color="#000" /> 
+                                                                <p key={i} className="text-xs capitalize text-grey-700 font-medium">
+                                                                    { s?.replaceAll("_", " ") }
+                                                                </p>                                                       
+                                                            </div>
+                                                        )
+                                                    })
+                                                }                                            
+                                            </div>
 
                                             <div className="flex gap-2">
-                                                <Badge variant="outline" className='font-bold text-grey-700 bg-grey-100 border-none py-1 px-2 rounded-2xl'>
-                                                    {service_category?.replaceAll("_", " ")}
-                                                </Badge>                                            
-                                            </div>
-                                        </div>
+                                                <Switch checked={status === "active"} />
+                                                <div className="flex flex-1 items-center justify-between">
+                                                    <div>
+                                                        {getServiceStatusBadge({ status })}
+                                                        {
+                                                            (status != 'approved')
+                                                            &&
+                                                                <p className="text-xs mt-1">
+                                                                    Prospective clients can not see this service
+                                                                </p>                                                    
+                                                        }
+                                                    </div>
 
-                                        <p className="text-sm text-grey-700 font-medium">
-                                            {pricing_type} Price: {currency} {formatNumberWithCommas(amount)}
-                                        </p>
-
-                                        <div className="flex gap-2">
-                                            <Switch checked={status === "active"} />
-                                            <div className="flex flex-1 items-center justify-between">
-                                                <div>
-                                                    {getServiceStatusBadge({ status })}
-                                                    {
-                                                        (status != 'active')
-                                                        &&
-                                                            <p className="text-xs">
-                                                                Prospective clients can not see this service
-                                                            </p>                                                    
-                                                    }
-                                                </div>
-
-                                                <div 
-                                                    onClick={() => navigate('/services/service', { state: { service_id: service?.id } })}
-                                                    className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer"
-                                                >
-                                                    <p className="text-sm mt-3">View</p>
-                                                    <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
+                                                    <div 
+                                                        onClick={() => navigate('/services/service', { state: { service_id: service?.id } })}
+                                                        className="flex items-center gap-2 text-primary-600 font-extrabold cursor-pointer"
+                                                    >
+                                                        <p className="text-sm mt-3">View</p>
+                                                        <Icon icon="mdi:arrow-right" className="mt-3.5 text-xl" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
                             )}
-                        )}
+                        </div>
+                        
+                        {
+                            canLoadMore
+                            &&
+                                <div className="w-full items-center justify-center flex">
+                                    <Button
+                                        onClick={handleLoadMore}
+                                        className={'bg-purple-600 text-white m-4 mt-1'}
+                                    >
+                                        Load more
+                                    </Button>
+                                </div>                            
+                        }
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-12">

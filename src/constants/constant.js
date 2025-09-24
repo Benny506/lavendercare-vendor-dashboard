@@ -1,5 +1,5 @@
 export const serviceStatuses = [
-  'pending', 'active', 'hidden', 'rejected'
+  'pending', 'approved', 'hidden', 'rejected'
 ]
 
 export const bookingStatuses = [
@@ -17,8 +17,6 @@ export const vendorServicesOptions = [
 ]
 
 export const currencies = ['NGN']
-
-export const phoneNumberCountryCodes = ['+234']
 
 export const ticketFields = ['billing', 'account', 'bookings', 'services', 'other']
 
@@ -259,3 +257,54 @@ export const walletTransactions = [
     status: "Success",
   },
 ];
+
+export const countries = [
+  { value: 'nigeria', title: 'Nigeria 🇳🇬', countryCode: '+234' },
+  // { value: 'ghana', title: 'Ghana 🇬🇭' },
+  // { value: 'united states', title: 'United States 🇺🇸' },
+  // { value: 'united kingdom', title: 'United Kingdom 🇬🇧' },
+];
+
+export const states = [
+  { "title": "Abia", "value": "abia", country: 'nigeria' },
+  { "title": "Adamawa", "value": "adamawa", country: 'nigeria' },
+  { "title": "Akwa Ibom", "value": "akwa_ibom", country: 'nigeria' },
+  { "title": "Anambra", "value": "anambra", country: 'nigeria' },
+  { "title": "Bauchi", "value": "bauchi", country: 'nigeria' },
+  { "title": "Bayelsa", "value": "bayelsa", country: 'nigeria' },
+  { "title": "Benue", "value": "benue", country: 'nigeria' },
+  { "title": "Borno", "value": "borno", country: 'nigeria' },
+  { "title": "Cross River", "value": "cross_river", country: 'nigeria' },
+  { "title": "Delta", "value": "delta", country: 'nigeria' },
+  { "title": "Ebonyi", "value": "ebonyi", country: 'nigeria' },
+  { "title": "Edo", "value": "edo", country: 'nigeria' },
+  { "title": "Ekiti", "value": "ekiti", country: 'nigeria' },
+  { "title": "Enugu", "value": "enugu", country: 'nigeria' },
+  { "title": "Gombe", "value": "gombe", country: 'nigeria' },
+  { "title": "Imo", "value": "imo", country: 'nigeria' },
+  { "title": "Jigawa", "value": "jigawa", country: 'nigeria' },
+  { "title": "Kaduna", "value": "kaduna", country: 'nigeria' },
+  { "title": "Kano", "value": "kano", country: 'nigeria' },
+  { "title": "Katsina", "value": "katsina", country: 'nigeria' },
+  { "title": "Kebbi", "value": "kebbi", country: 'nigeria' },
+  { "title": "Kogi", "value": "kogi", country: 'nigeria' },
+  { "title": "Kwara", "value": "kwara", country: 'nigeria' },
+  { "title": "Lagos", "value": "lagos", country: 'nigeria' },
+  { "title": "Nasarawa", "value": "nasarawa", country: 'nigeria' },
+  { "title": "Niger", "value": "niger", country: 'nigeria' },
+  { "title": "Ogun", "value": "ogun", country: 'nigeria' },
+  { "title": "Ondo", "value": "ondo", country: 'nigeria' },
+  { "title": "Osun", "value": "osun", country: 'nigeria' },
+  { "title": "Oyo", "value": "oyo", country: 'nigeria' },
+  { "title": "Plateau", "value": "plateau", country: 'nigeria' },
+  { "title": "Rivers", "value": "rivers", country: 'nigeria' },
+  { "title": "Sokoto", "value": "sokoto", country: 'nigeria' },
+  { "title": "Taraba", "value": "taraba", country: 'nigeria' },
+  { "title": "Yobe", "value": "yobe", country: 'nigeria' },
+  { "title": "Zamfara", "value": "zamfara", country: 'nigeria' },
+  { "title": "FCT - Abuja", "value": "fct", country: 'nigeria' }
+]
+
+export const cities = [
+  { title: 'Calabar', country: 'nigeria', state: 'cross_river' }
+]

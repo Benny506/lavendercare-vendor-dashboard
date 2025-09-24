@@ -13,6 +13,7 @@ export default function VerifyEmail() {
     const navigate = useNavigate()
 
     const { state } = useLocation()
+    const fromForgotPassword = state?.fromForgotPassword ? true : false
 
     const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
 
@@ -69,6 +70,10 @@ export default function VerifyEmail() {
     const { email } = state
 
     const onValidated = () => {
+        if(fromForgotPassword){
+            return navigate('/recover-password/new-password', { state: { email }, replace: true })
+        }
+
         setApiReqs({
             isLoading: true,
             errorMsg: null,
@@ -99,6 +104,7 @@ export default function VerifyEmail() {
                         <OtpInput 
                             onValidated={onValidated}
                             email={email}
+                            fromForgotPassword={true}
                         />
                     </div>
                 ),

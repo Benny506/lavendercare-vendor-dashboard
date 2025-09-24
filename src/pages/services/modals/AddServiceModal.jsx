@@ -1,7 +1,7 @@
 import ErrorMsg1 from "@/components/ErrorMsg1";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
-import { services, vendorServicesOptions } from "@/constants/constant";
+import { cities, countries, services, states, vendorServicesOptions } from "@/constants/constant";
 import { ErrorMessage, Formik } from "formik";
 import { Minus } from "lucide-react";
 import { useState } from "react";
@@ -24,18 +24,24 @@ export default function AddServiceModal({
                         service_category: yup.string().required("Service category is required"),
                         service_details: yup.string().required("Service details is required"),
                         location: yup.string().required("Service location is required"),
+                        country: yup.string().required("Country is required"),
+                        city: yup.string().required("City is required"),
+                        state: yup.string().required("State is required")
                     })}
                     initialValues={{
                         service_name: info?.service_name || '',
                         service_category: info?.service_category || '',
                         service_details: info?.service_details || '',
-                        location: info?.location || ''
+                        location: info?.location || '',
+                        country: info?.country || '',
+                        city: info?.city || '',
+                        state: info?.state || '',
                     }}
                     onSubmit={(values) => {
                         handleContinueBtnClick(values)
                     }}
                 >
-                    {({ values, isValid, dirty, handleBlur, handleChange, handleSubmit}) => (
+                    {({ values, isValid, dirty, handleBlur, handleChange, handleSubmit, setFieldValue }) => (
                         <Modal
                             title="Add Service details"
                             primaryButton="Continue"
@@ -72,6 +78,103 @@ export default function AddServiceModal({
                                 </div>
 
                                 <div>
+                                    <label className="block text-sm font-medium text-grey-600 mb-1">Country</label>
+                                    <select
+                                        name="country"
+                                        value={values.country}
+                                        onBlur={handleBlur}
+                                        onChange={(e) => {
+                                            setFieldValue("state", "")
+                                            setFieldValue("city", "")
+                                            setFieldValue("country", e.target.value)
+                                        }}
+                                        type="text"
+                                        className="w-full border border-grey-300 rounded-md p-2"
+                                    >
+                                        <option value={''} selected disabled>
+                                            Country where your service is located
+                                        </option>
+                                        {
+                                            countries.map((c, i) => {
+                                                const { title, value } = c
+
+                                                return (
+                                                    <option key={i} value={value}>
+                                                        { title }
+                                                    </option>
+                                                )
+                                            })
+                                        }
+                                    </select>
+                                    <ErrorMessage name="country">
+                                        { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
+                                    </ErrorMessage>
+                                </div> 
+
+                                <div>
+                                    <label className="block text-sm font-medium text-grey-600 mb-1">State</label>
+                                    <select
+                                        name="state"
+                                        value={values.state}
+                                        onBlur={handleBlur}
+                                        onChange={(e) => {
+                                            setFieldValue("city", "")
+                                            setFieldValue("state", e.target.value)
+                                        }}
+                                        type="text"
+                                        className="w-full border border-grey-300 rounded-md p-2"
+                                    >
+                                        <option value={''} selected disabled>
+                                            State where your service is located
+                                        </option>
+                                        {
+                                            states.filter(s => s?.country === values?.country).map((s, i) => {
+                                                const { title, value } = s
+
+                                                return (
+                                                    <option key={i} value={value}>
+                                                        { title }
+                                                    </option>
+                                                )
+                                            })
+                                        }
+                                    </select>
+                                    <ErrorMessage name="state">
+                                        { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
+                                    </ErrorMessage>
+                                </div> 
+
+                                <div>
+                                    <label className="block text-sm font-medium text-grey-600 mb-1">City</label>
+                                    <select
+                                        name="city"
+                                        value={values.city}
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        type="text"
+                                        className="w-full border border-grey-300 rounded-md p-2"
+                                    >
+                                        <option value={''} selected disabled>
+                                            City where your service is located
+                                        </option>
+                                        {
+                                            cities.filter(c => c?.country === values?.country && c?.state === values?.state).map((c, i) => {
+                                                const { title, value } = c
+
+                                                return (
+                                                    <option key={i} value={value}>
+                                                        { title }
+                                                    </option>
+                                                )
+                                            })
+                                        }
+                                    </select>
+                                    <ErrorMessage name="city">
+                                        { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
+                                    </ErrorMessage>
+                                </div>                                                                                                 
+
+                                <div>
                                     <label className="block text-sm font-medium text-grey-600 mb-1">Location</label>
                                     <input
                                         name="location"
@@ -79,7 +182,7 @@ export default function AddServiceModal({
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                         type="text"
-                                        placeholder="Where can one find your service"
+                                        placeholder="Specific address"
                                         className="w-full border border-grey-300 rounded-md p-2"
                                     />
                                     <ErrorMessage name="location">

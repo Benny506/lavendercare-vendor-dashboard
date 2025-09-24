@@ -1,7 +1,7 @@
 import AuthForm from "@/components/AuthForm";
 import VendorAccount from "@/components/VendorAccount";
 import PhoneInput from "@/components/PhoneInput";
-import { Formik } from "formik";
+import { ErrorMessage, Formik } from "formik";
 import * as yup from 'yup'
 import { vendorServicesOptions } from "@/constants/constant";
 import { useNavigate } from "react-router-dom";
@@ -10,60 +10,19 @@ import { useEffect, useState } from "react";
 import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
 import { toast } from "react-toastify";
 import supabase, { checkPhoneNumberExists } from "@/database/dbInit";
+import { Eye, EyeOff } from "lucide-react";
+import ErrorMsg1 from "@/components/ErrorMsg1";
 
 export default function CreateVendorProfile() {
     const dispatch = useDispatch()
 
     const navigate = useNavigate()
 
-    const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
+    const [passwordVisible, setPasswordVisible] = useState(false)
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
 
-    useEffect(() => {
-        const { isLoading, data } = apiReqs
-
-        if(isLoading) dispatch(appLoadStart());
-        else dispatch(appLoadStop());
-
-        if(isLoading && data){
-
-            const { type, requestInfo } = data
-
-            if(type == 'confirmPhoneNumber'){
-                confirmPhoneNumber({ requestInfo })
-            }
-        }
-    }, [apiReqs])
-
-    const confirmPhoneNumber = async ({ requestInfo }) => {
-        try {
-
-            const phoneNumberExists = await checkPhoneNumberExists({ phone_number: requestInfo?.phone_number })
-
-            if(!phoneNumberExists){
-                setApiReqs({ isLoading: false, errorMsg: null, data: null })
-                navigate('/new-vendor/verify-email', { state: requestInfo })
-                toast.success("Phone number unique")
-
-                return
-            }
-
-            const errorMsg = 'Phone number in use by another account'
-            setApiReqs({ isLoading: false, errorMsg, data: null })
-            toast.error(errorMsg)
-
-            return
-            
-        } catch (error) {
-            console.log(error)
-            return confirmPhoneNumberFailure({ errorMsg: 'Something went wrong! Try again later' })
-        }
-    }
-    const confirmPhoneNumberFailure = ({ errorMsg }) => {
-        setApiReqs({ isLoading: false, errorMsg: null, data: null })
-        toast.error(errorMsg)
-
-        return;
-    }
+    const togglePasswordVisibility = () => setPasswordVisible(prev => !prev)
+    const toggleConfirmPasswordVisibility = () => setConfirmPasswordVisible(prev => !prev)
 
     return (
         <div>
@@ -82,8 +41,6 @@ export default function CreateVendorProfile() {
                     validationSchema={yup.object().shape({
                         business_name: yup.string().required("Business name is required"),
                         email: yup.string().email("Must be a valid email address").required("Email is required"),
-                        service_category: yup.string().required("Service category is required"),
-                        phone_number: yup.string().required("Phone number is required").matches(/^\d+$/, "Phone number must contain only digits"),
                         password: yup
                             .string()
                             .required('Password is required')
@@ -96,28 +53,18 @@ export default function CreateVendorProfile() {
                         confirmPassword: yup
                             .string()
                             .required('Confirm Password is required')
-                            .oneOf([yup.ref('password'), null], 'Passwords must match'),                        
+                            .oneOf([yup.ref('password'), null], 'Passwords must match'),
                     })}
                     initialValues={{
-                        business_name: '', email: '', service_category: '', password: '', confirmPassword: '',
+                        business_name: '', email: '', password: '', confirmPassword: '',
                         phone_number: ''
                     }}
                     onSubmit={values => {
-                        const stateData = {
-                            ...values,
-                            service_category: values.service_category?.replaceAll(" ", "_").toLowerCase()
-                        }
+                        const stateData = values
 
                         delete stateData.confirmPassword
 
-                        setApiReqs({
-                            isLoading: true,
-                            errorMsg: null,
-                            data: {
-                                type: 'confirmPhoneNumber',
-                                requestInfo: stateData
-                            }
-                        })
+                        navigate('/new-vendor/verify-email', { state: stateData })
                     }}
                 >
                     {({
@@ -132,20 +79,62 @@ export default function CreateVendorProfile() {
                             fields={[
                                 { withErrMsg: true, name: "business_name", onChange: handleChange, onBlur: handleBlur, value: values.business_name, label: "Business Name", type: "text", placeholder: "Type your business name", required: true },
                                 { withErrMsg: true, name: "email", onChange: handleChange, onBlur: handleBlur, value: values.email, label: "Business Email Address", type: "email", placeholder: "Type your business email address", required: true },
-                                { options: vendorServicesOptions, withErrMsg: true, name: "service_category", onChange: handleChange, onBlur: handleBlur, value: values.service_category, label: "Service Category", type: "select", placeholder: "What category do your services fall under", required: true },
-                                { withErrMsg: true, name: 'password', onChange: handleChange, onBlur: handleBlur, value: values.password, label: "Create Password", type: "password", placeholder: "Create password", required: true },
-                                { withErrMsg: true, name: "confirmPassword", onChange: handleChange, onBlur: handleBlur, value: values.confirmPassword, label: "Confirm Password", type: "password", placeholder: "Re-Type password", required: true },
+                                {},
+                                {},
                             ]}
                             customFields={{
                                 2: (
-                                    <div className="my-2">
-                                        <PhoneInput 
-                                            value={values.phone_number}
-                                            name="phone_number"
+                                    <div className="flex flex-col relative">
+                                        <label className="text-sm font-medium mb-1">
+                                            Password
+                                        </label>
+                                        <input
+                                            name={'password'}
+                                            value={values.password}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
-                                            withErrMsg={true}
+                                            type={passwordVisible ? 'text' : 'password'}
+                                            placeholder={"Your password"}
+                                            required
+                                            className="border border-grey-300 bg-white placeholder:text-grey-400 rounded-lg px-3 py-2 text-sm focus:outline-none pr-10"
                                         />
+                                        {
+                                            passwordVisible
+                                                ?
+                                                <EyeOff className="cursor-pointer absolute right-3 top-8 text-grey-800" size={16} onClick={togglePasswordVisibility} />
+                                                :
+                                                <Eye className="cursor-pointer absolute right-3 top-8 text-grey-800" size={16} onClick={togglePasswordVisibility} />
+                                        }
+                                        <ErrorMessage name={'password'}>
+                                            {errorMsg => <ErrorMsg1 errorMsg={errorMsg} position={'left'} />}
+                                        </ErrorMessage>
+                                    </div>
+                                ),
+                                3: (
+                                    <div className="flex flex-col relative">
+                                        <label className="text-sm font-medium mb-1">
+                                            Confirm Password
+                                        </label>
+                                        <input
+                                            name={'confirmPassword'}
+                                            value={values.confirmPassword}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            type={confirmPasswordVisible ? 'text' : 'password'}
+                                            placeholder={"Re-type password"}
+                                            required
+                                            className="border border-grey-300 bg-gray-50 placeholder:text-grey-400 rounded-lg px-3 py-2 text-sm focus:outline-none pr-10"
+                                        />
+                                        {
+                                            confirmPasswordVisible
+                                                ?
+                                                <EyeOff className="cursor-pointer absolute right-3 top-8 text-grey-800" size={16} onClick={toggleConfirmPasswordVisibility} />
+                                                :
+                                                <Eye className="cursor-pointer absolute right-3 top-8 text-grey-800" size={16} onClick={toggleConfirmPasswordVisibility} />
+                                        }
+                                        <ErrorMessage name={'confirmPassword'}>
+                                            {errorMsg => <ErrorMsg1 errorMsg={errorMsg} position={'left'} />}
+                                        </ErrorMessage>
                                     </div>
                                 )
                             }}
@@ -163,7 +152,7 @@ export default function CreateVendorProfile() {
                 </Formik>
             </div>
             <div className="block md:hidden my-4 -mt-4">
-                <VendorAccount className="mx-auto justify-center"/>
+                <VendorAccount className="mx-auto justify-center" />
             </div>
         </div>
     );

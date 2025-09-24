@@ -3,8 +3,8 @@ import { bookingStatuses, serviceStatuses } from '../constants/constant'
 
 //services
 export const servicesMap = {
-    active: {
-        color: "bg-green-600 text-green-600",
+    approved: {
+        color: "bg-green-100 text-green-500",
         feedBack: 'Prospective clients can see this service'
     },
     pending: {
@@ -12,11 +12,11 @@ export const servicesMap = {
         feedBack: 'Awaiting approval from admin.'
     },
     rejected: {
-        color: "bg-red-600 text-red-600",
+        color: "bg-red-100 text-red-500",
         feedBack: 'Rejected by admin. Edit and re-submit for approval'
     },
     hidden: {
-        color: "bg-gray-500 text-gray-500",
+        color: "bg-gray-100 text-gray-500",
         feedBack: "Prospective clients can not see this service"
     }
 }
@@ -52,7 +52,7 @@ export const bookingsMap = {
         feedBack: "This appointment is currently on-going"
     },
     new: {
-        color: "bg-warning-50 text-warning-700",
+        color: "bg-green-50 text-green-700",
         feedBack: "This appointment has been confirmed"
     },
     completed: {

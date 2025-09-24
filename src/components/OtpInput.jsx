@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 const initialSeconds = 59
 
-const OtpInput = ({ length = 6, onValidated, email='' }) => {
+const OtpInput = ({ length = 6, onValidated, email='', fromForgotPassword }) => {
   const dispatch = useDispatch()
   
   const navigate = useNavigate()
@@ -94,9 +94,9 @@ const OtpInput = ({ length = 6, onValidated, email='' }) => {
     if(!email) return;
     try {
 
-        const { userAlreadyExists, token, error  } = await createOrUpdateOtp({ email, requiresAuth: false })
+        const { userAlreadyExists, token, error  } = await createOrUpdateOtp({ email, requiresAuth: fromForgotPassword ? true : false })
 
-        if(userAlreadyExists){
+        if(userAlreadyExists && !fromForgotPassword){
             setApiReqs({ isLoading: false, errorMsg: null, type: 'sendOtp' })
             toast.info("Email already used by another user")
             navigate(-1)

@@ -119,6 +119,10 @@ export function timeToAMPM_FromHour({ hour }) {
   return `${hours.toString().padStart(2, '0')}:00 ${suffix}`;
 }
 
+export function extractHour_FromHHMM({ hourString }){
+  return parseInt(hourString.split(":")[0], 10);
+}
+
 export function timeToAMPM_FromHour_Duration({ startHour, durationInSeconds }) {
   const date = new Date();
   date.setHours(startHour, 0, 0, 0);
@@ -155,18 +159,39 @@ export function removeDuplicates(arr) {
   return [...new Set(arr)];
 }
 
-export function removeDuplicatesWithCount(arr) {
-  const counts = {}
+export function removeDuplicatesWithCount({ arr, key }) {
+  if (!key) {
+    // Primitive mode
+    const counts = {};
+    arr.forEach(item => {
+      const identifier = String(item);
+      counts[identifier] = (counts[identifier] || 0) + 1;
+    });
+
+    return {
+      unique: Object.keys(counts),
+      counts
+    };
+  }
+
+  // Object mode
+  const map = new Map();
 
   arr.forEach(item => {
-    counts[item] = (counts[item] || 0) + 1;
+    const identifier = String(item[key]);
+    if (map.has(identifier)) {
+      map.get(identifier).count++;
+    } else {
+      map.set(identifier, { ...item, count: 1 });
+    }
   });
 
   return {
-    unique: Object.keys(counts),
-    counts
+    unique: Array.from(map.values())
   };
 }
+
+
 
 export function sortByKey({ arr, key, order = "asc" }) {
   if (!Array.isArray(arr)) {

@@ -1,24 +1,37 @@
 import ErrorMsg1 from "@/components/ErrorMsg1";
 import Modal from "@/components/Modal";
 import { ticketFields } from "@/constants/constant";
+import { ticketsMap, ticketStatusMap } from "@/lib/utilsJsx";
+import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
 import { ErrorMessage, Formik } from "formik";
+import { useSelector } from "react-redux";
 import * as yup from 'yup'
 
 export default function CreateTicket({
-    hide=()=>{}
+    hide=()=>{}, handleCreateTicket=()=>{}
 }){
+
+    const profile = useSelector(state => getUserDetailsState(state).profile)
+
     return(
         <Formik
             validationSchema={yup.object().shape({
                 subject: yup.string().required("Subject is required"),
                 ticket_details: yup.string().required("Ticket details is required"),
-                field: yup.string().required("Field is required")
+                field: yup.string().required("Field is required"),
+                priority: yup.string().required("Priority is required")
             })}
             initialValues={{
-                subject: '', ticket_details: '', field: ''
+                subject: '', ticket_details: '', field: '', priority: ''
             }}
             onSubmit={values => {
-
+                handleCreateTicket({
+                    requestInfo: {
+                        ...values,
+                        user_id: profile?.id,
+                        usertype: 'vendor'
+                    }
+                })
             }}
         >
             {
@@ -58,7 +71,7 @@ export default function CreateTicket({
                             </div>                               
 
                             <div>
-                                <label className="block text-sm font-medium text-grey-600 mb-1">Service Category</label>
+                                <label className="block text-sm font-medium text-grey-600 mb-1">Field</label>
                                 <select 
                                     name="field"
                                     value={values.field}
@@ -66,7 +79,7 @@ export default function CreateTicket({
                                     onBlur={handleBlur}                                    
                                     className="w-full border border-grey-300 rounded-md p-2.5 focus:outline-none text-grey-500"
                                 >
-                                    <option value={""} selected disabled>Select Category that applies</option>
+                                    <option value={""} selected disabled>What Field?</option>
                                     {
                                         ticketFields.map((opt, optIndex) => (
                                             <option
@@ -82,6 +95,32 @@ export default function CreateTicket({
                                     { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
                                 </ErrorMessage>                                    
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-grey-600 mb-1">Priority</label>
+                                <select 
+                                    name="priority"
+                                    value={values.priority}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}                                    
+                                    className="w-full border border-grey-300 rounded-md p-2.5 focus:outline-none text-grey-500"
+                                >
+                                    <option value={""} selected disabled>How severe?</option>
+                                    {
+                                        Object.keys(ticketsMap).map((opt, optIndex) => (
+                                            <option
+                                                key={optIndex}
+                                                value={opt?.toLowerCase().replaceAll(" ", "_")}
+                                            >
+                                                { opt }
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                                <ErrorMessage name="priority">
+                                    { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
+                                </ErrorMessage>                                    
+                            </div>                            
 
                             <div>
                                 <label className="block text-sm font-medium text-grey-600 mb-1">Ticket Details</label>

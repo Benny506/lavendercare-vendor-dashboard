@@ -19,6 +19,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const { pathname } = useLocation()
 
   const profile = useSelector(state => getUserDetailsState(state).profile)
+  const user = useSelector(state => getUserDetailsState(state).user)
 
   const userLogout = async () => {
       try {
@@ -178,7 +179,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         }
         <div className="flex-1">
           <div className="font-bold text-md text-[#2D1A4A]">{profile?.business_name}</div>
-          <div className="text-[#7B3FE4] text-sm">{profile?.email}</div>
+          <div className="text-[#7B3FE4] text-sm">{user?.email}</div>
         </div>
         <button onClick={userLogout} className="cursor-pointer">
           <Icon icon="solar:logout-outline" width="24" height="24" style={{ color: "red" }} />

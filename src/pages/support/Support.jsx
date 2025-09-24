@@ -5,27 +5,132 @@ import { usePagination } from "@/hooks/usePagination";
 import { isoToDateTime } from "@/lib/utils";
 import { getTicketPriorityBadge, getTicketStatusBadge } from "@/lib/utilsJsx";
 import { Icon } from "@iconify/react";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import CreateTicket from "./modals/CreateTicket";
-
-const dummyTickets = [
-    {
-        id: 'tt1',
-        subject: 'Subject one',
-        created_at: new Date().toISOString(),
-        priority: 'high',
-        status: 'open'
-    }
-]
+import { useDispatch, useSelector } from "react-redux";
+import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
+import { toast } from "react-toastify";
+import supabase from "@/database/dbInit";
+import { getUserDetailsState } from "@/redux/slices/userDetailsSlice";
+import TicketInfoModal from "./modals/TicketInfo";
 
 export default function Support(){
+    const dispatch = useDispatch()
+
+    const profile = useSelector(state => getUserDetailsState(state).profile)
 
     const [tab, setTab] = useState('All')
-    const [tickets, setTickets] = useState(dummyTickets)
+    const [tickets, setTickets] = useState([])
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
     const [pageListIndex, setPageListIndex] = useState(0) 
-    const [createModalOpen, setCreateModalOpen] = useState(false)   
+    const [createModalOpen, setCreateModalOpen] = useState(false)  
+    const [activeTicket, setActiveTicket] = useState(null)
+    const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null }) 
+
+    useEffect(() => {
+        setApiReqs({
+            isLoading: true,
+            errorMsg: null,
+            data: {
+                type: 'fetchTickets'
+            }
+        })
+    }, [])
+
+    useEffect(() => {
+        const { isLoading, data } = apiReqs
+
+        if(isLoading) dispatch(appLoadStart());
+        else dispatch(appLoadStop());
+
+        if(isLoading && data){
+            const { type, requestInfo } = data
+
+            if(type === 'fetchTickets'){
+                fetchTickets()
+            }
+
+            if(type === 'createTicket'){
+                createTicket({ requestInfo })
+            }
+        }
+    }, [apiReqs])
+
+    const createTicket = async ({ requestInfo }) => {
+        try {
+
+            const { data, error } = await supabase
+                .from("support_tickets")
+                .insert(requestInfo)
+                .select()
+                .single()
+
+            if(error){
+                console.error(error)
+                throw new Error()
+            }
+
+            const updatedTickets = [...tickets, data]
+            setTickets(updatedTickets)
+
+            setApiReqs({ isLoading: false, errorMsg: null, data: null })
+            toast.success("Ticket created and submitted")
+
+            return;
+            
+        } catch (error) {
+            console.log(error)
+            return createTicketFailure({ errorMsg: 'Something went wrong! Try again.' })
+        }
+    }
+    const createTicketFailure = ({ errorMsg }) => {
+        setApiReqs({ isLoading: false, data: null, errorMsg })
+        toast.error(errorMsg)
+
+        return;
+    }
+
+    const fetchTickets = async () => {
+        try {
+
+            const { data, error } = await supabase
+                .from('support_tickets')
+                .select('*')
+                .eq("user_id", profile?.id)
+                .order('created_at', { ascending: false })
+
+            if(error){
+                console.error(error)
+                throw new Error()
+            }
+
+            setTickets(data)
+
+            setApiReqs({ isLoading: false, errorMsg: null, data: null })
+            
+        } catch (error) {
+            console.error(error)
+            return fetchTicketsFailure({ errorMsg: 'Something went wrong! Try again.' })
+        }
+    }
+    const fetchTicketsFailure = ({ errorMsg }) => {
+        setApiReqs({ isLoading: false, errorMsg, data: null })
+        toast.error(errorMsg)
+
+        return;
+    }
+
+    const handleCreateTicket = ({ requestInfo }) => {
+        setApiReqs({
+            isLoading: true,
+            errorMsg: null,
+            data: {
+                type: 'createTicket',
+                requestInfo
+            }
+        })
+    }
 
     // ✅ Filter & Search
     const filteredData = tickets.filter(
@@ -100,6 +205,13 @@ export default function Support(){
             ),
         },
         {
+            key: "field",
+            label: "Field",
+            // render: (row) => (
+            //     getTicketPriorityBadge({ status: row?.priority })
+            // ),
+        },        
+        {
             key: "status",
             label: "Status",
             render: (row) => (
@@ -111,6 +223,7 @@ export default function Support(){
             label: "Action",
             render: (row) => (
                 <button 
+                    onClick={() => setActiveTicket(row)}
                     className="cursor-pointer px-4 py-1 text-sm bg-primary-500 text-grey-50 rounded-4xl"
                 >
                     View
@@ -276,8 +389,14 @@ export default function Support(){
                 &&
                     <CreateTicket 
                         hide={() => setCreateModalOpen(false)}
+                        handleCreateTicket={handleCreateTicket}
                     />
             }
+
+            <TicketInfoModal 
+                ticket={activeTicket}
+                hide={() => setActiveTicket(null)}
+            />
         </div>
     )
 }

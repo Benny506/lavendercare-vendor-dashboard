@@ -13,6 +13,7 @@ import { getUserDetailsState } from '@/redux/slices/userDetailsSlice'
 import { toast } from 'react-toastify'
 import { clockTimer, formatNumberWithCommas, isoToDateTime, timeToAMPM_FromHour } from '@/lib/utils'
 import { bookingsMap } from '@/lib/utilsJsx'
+import { Dot } from 'lucide-react'
 
 const BookingDetails = () => {
     const navigate = useNavigate()
@@ -105,13 +106,13 @@ const BookingDetails = () => {
                 </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 my-6 bg-error-50 w-full p-4 rounded-2xl justify-between items-start md:items-center">
-                <div className="flex flex-col justify-between text-grey-600">
+            <div className={`flex flex-col md:flex-row gap-4 my-6 w-full p-4 rounded-2xl justify-between items-start md:items-center ${bookingsMap[status]?.color}`}>
+                <div className="flex flex-col justify-between">
                     <p className="text-md font-semibold capitalize mb-1">
                         { status }
                     </p>
 
-                    <p className="text-sm">
+                    <p className="text-sm text-grey-600">
                         { bookingsMap[status]?.feedBack }
                     </p>
                 </div>
@@ -141,7 +142,24 @@ const BookingDetails = () => {
 
                         <div className='flex items-center justify-between gap-4 w-full'>
                             <p>Location:</p>
-                            <p className='font-bold'>Lekki, Lagos, Nigeria</p>
+                            <div className='flex items-center gap-1'>
+                                {
+                                    [service?.location, service?.city, service?.state, service?.country]
+                                    .map((s, i) => {
+                                        return (
+                                            <div key={i} className='flex items-center gap-1'>
+                                                <p className='font-bold capitalize text-sm'>{s?.replaceAll("_", " ")}</p>
+
+                                                { 
+                                                    i !== 3
+                                                    &&
+                                                        <Dot color='#000' size={20} />
+                                                }
+                                            </div>
+                                        )
+                                    })
+                                }
+                            </div>
                         </div>
                     </div>
 
@@ -183,9 +201,9 @@ const BookingDetails = () => {
                             </div>
                         </div>
 
-                        <div className='w-full  p-4 mt-1'>
+                        {/* <div className='w-full  p-4 mt-1'>
                             <Button className="text-grey-50 font-bold bg-primary-500 rounded-4xl p-6 w-full">View messages</Button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 

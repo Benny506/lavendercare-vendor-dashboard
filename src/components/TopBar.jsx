@@ -42,14 +42,14 @@ const TopBar = ({ setIsOpen }) => {
                     </div> */}
 
                     {/* Notification Icon with Badge */}
-                    <div className="relative cursor-pointer">
+                    {/* <div className="relative cursor-pointer">
                         <div className="p-2 rounded-sm border border-grey-200">
                             <Icon icon="mdi:notifications-none" width="24" height="24" className="text-primary-500" />
                         </div>
                         <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-semibold w-5 h-5 flex items-center justify-center rounded-full">
                             1
                         </span>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
