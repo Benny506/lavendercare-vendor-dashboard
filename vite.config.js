@@ -5,7 +5,7 @@ import { defineConfig } from "vite"
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/lavendercare-vendor-dashboard/',
+  base: '/vendor.lavendercare.co/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
