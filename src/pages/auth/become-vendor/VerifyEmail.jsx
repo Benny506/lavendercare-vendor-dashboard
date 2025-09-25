@@ -104,7 +104,7 @@ export default function VerifyEmail() {
                         <OtpInput 
                             onValidated={onValidated}
                             email={email}
-                            fromForgotPassword={true}
+                            fromForgotPassword={fromForgotPassword}
                         />
                     </div>
                 ),

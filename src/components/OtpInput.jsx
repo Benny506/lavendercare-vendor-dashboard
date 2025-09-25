@@ -22,7 +22,7 @@ const OtpInput = ({ length = 6, onValidated, email='', fromForgotPassword }) => 
     if(!onValidated || !email) return
         
     setApiReqs({ isLoading: true, errorMsg: null, data: { type: 'sendOtp', requestInfo: {} } })
-    sendOtp()
+    sendOtp({})
 
     let _timer = initialSeconds
     const timerInterval = setInterval(() => {
@@ -92,6 +92,7 @@ const OtpInput = ({ length = 6, onValidated, email='', fromForgotPassword }) => 
 
   const sendOtp = async ({ requestInfo }) => {
     if(!email) return;
+
     try {
 
         const { userAlreadyExists, token, error  } = await createOrUpdateOtp({ email, requiresAuth: fromForgotPassword ? true : false })
