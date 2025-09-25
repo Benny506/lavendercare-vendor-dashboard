@@ -1,8 +1,11 @@
 import AuthForm from '@/components/AuthForm'
+import ErrorMsg1 from '@/components/ErrorMsg1'
 import { vendorLogin } from '@/database/dbInit'
 import { appLoadStart, appLoadStop } from '@/redux/slices/appLoadingSlice'
 import { setUserDetails } from '@/redux/slices/userDetailsSlice'
-import { Formik } from 'formik'
+import { ErrorMessage, Formik } from 'formik'
+import { Eye } from 'lucide-react'
+import { EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
@@ -15,21 +18,24 @@ const Login = () => {
     const navigate = useNavigate()
 
     const [apiReqs, setApiReqs] = useState({ isLoading: false, data: null, errorMsg: null })
+    const [passwordVisible, setPasswordVisible] = useState(false)
 
     useEffect(() => {
         const { isLoading, data } = apiReqs
 
-        if(isLoading) dispatch(appLoadStart());
+        if (isLoading) dispatch(appLoadStart());
         else dispatch(appLoadStop());
 
-        if(isLoading && data){
+        if (isLoading && data) {
             const { type, requestInfo } = data
 
-            if(type == 'login'){
+            if (type == 'login') {
                 login({ requestInfo })
             }
         }
     }, [apiReqs])
+
+    const togglePasswordVisibility = () => setPasswordVisible(prev => !prev)
 
     const login = async ({ requestInfo }) => {
         try {
@@ -38,8 +44,8 @@ const Login = () => {
 
             const { data, errorMsg } = await vendorLogin({ email, password })
 
-            if(!data || errorMsg) {
-                if(errorMsg){
+            if (!data || errorMsg) {
+                if (errorMsg) {
                     setApiReqs({ isLoading: false, data: null, errorMsg })
                     toast.error(errorMsg)
 
@@ -60,7 +66,7 @@ const Login = () => {
             navigate('/')
 
             return;
-            
+
         } catch (error) {
             return loginFailure({ errorMsg: 'Something went wrong! Try again' })
         }
@@ -84,7 +90,7 @@ const Login = () => {
                 }}
                 onSubmit={(values) => {
                     setApiReqs({
-                        isLoading: true, 
+                        isLoading: true,
                         errorMsg: null,
                         data: {
                             type: 'login',
@@ -102,11 +108,39 @@ const Login = () => {
                         buttonFunc={handleSubmit}
                         fields={[
                             { onChange: handleChange, onBlur: handleBlur, withErrMsg: true, value: values.email, name: 'email', label: "Business Email Address", type: "email", placeholder: "Type your business email address", required: true },
-                            { onChange: handleChange, onBlur: handleBlur, withErrMsg: true, value: values.password, name: 'password', label: "Password", type: "password", placeholder: "Type your password", required: true },
+                            {},
+                            // { onChange: handleChange, onBlur: handleBlur, withErrMsg: true, value: values.password, name: 'password', label: "Password", type: "password", placeholder: "Type your password", required: true },
                         ]}
                         customFields={{
+                            0: (
+                                <div className="flex flex-col relative">
+                                    <label className={"text-sm font-medium text-gray-600 mb-1"}>
+                                        Password
+                                    </label>
+                                    <input
+                                        name={'password'}
+                                        value={values.password}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        type={passwordVisible ? 'text' : 'password'}
+                                        placeholder={"Your password"}
+                                        required
+                                        className="border border-grey-300 bg-white placeholder:text-grey-400 rounded-lg px-3 py-2 text-sm focus:outline-none pr-10"
+                                    />
+                                    {
+                                        passwordVisible
+                                            ?
+                                            <EyeOff className="cursor-pointer absolute right-3 top-8 text-grey-800" size={16} onClick={togglePasswordVisibility} />
+                                            :
+                                            <Eye className="cursor-pointer absolute right-3 top-8 text-grey-800" size={16} onClick={togglePasswordVisibility} />
+                                    }
+                                    <ErrorMessage name={'password'}>
+                                        {errorMsg => <ErrorMsg1 errorMsg={errorMsg} position={'left'} />}
+                                    </ErrorMessage>
+                                </div>
+                            ),
                             1: (
-                                <div className='flex justify-end w-full mt-2 cursor-pointer' onClick={() => {navigate("/recover-password")}}>
+                                <div className='flex justify-end w-full mt-2 cursor-pointer' onClick={() => { navigate("/recover-password") }}>
                                     <span className='font-bold text-primary-500'> Forgot Password? </span>
                                 </div>
                             )

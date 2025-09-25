@@ -29,23 +29,23 @@ const HideService = ({
         if(isLoading && data){
             const { type } = data
 
-            if(type === 'hideService'){
-                hideService()
+            if(type === 'hideService' || type === 'showService'){
+                updateServiceVisibility({ status: type === 'hideService' ? 'hidden' : 'approved' })
             }
 
-            if(type === 'deleteService'){
-                deleteService()
-            }
+            // if(type === 'deleteService'){
+            //     deleteService()
+            // }
         }
     }, [apiReqs])
 
-    const hideService = async () => {
+    const updateServiceVisibility = async ({ status }) => {
         try {
 
             const { data, error } = await supabase
                 .from('vendor_services')
                 .update({
-                    status: 'hidden'
+                    status
                 })
                 .eq('vendor_id', profile?.id)
                 .eq('id', service?.id)
@@ -61,7 +61,7 @@ const HideService = ({
                 if(s?.id === service?.id){
                     return {
                         ...s,
-                        status: 'hidden'
+                        status
                     }
                 }
 
@@ -74,85 +74,85 @@ const HideService = ({
 
             setApiReqs({ isLoading: false, errorMsg: null, data: null })
             hide()
-            toast.success("Service hidden")
+            toast.success("Service status updated to: " + status)
             
         } catch (error) {
             console.error(error)
-            return hideServiceFailure({ errorMsg: 'Something went wrong! Try again.' })
+            return updateServiceVisibilityFailure({ errorMsg: 'Something went wrong! Try again.' })
         }
     }
-    const hideServiceFailure = ({ errorMsg }) => {
+    const updateServiceVisibilityFailure = ({ errorMsg }) => {
         setApiReqs({ isLoading: false, errorMsg, data: null })
         toast.error(errorMsg)
 
         return;
     }
 
-    const deleteService = async () => {
-        try {
+    // const deleteService = async () => {
+    //     try {
 
-            //check if any future booking exists
-            const { count: bookingsForServiceCount, error: bookingsForServiceCountError } = await supabase
-                .from('vendor_bookings')
-                .select('*', { count: "exact", head: true })
-                .eq("service_id", service?.id)    
-                .gte("day", new Date().toISOString().split("T")[0])   
+    //         //check if any future booking exists
+    //         const { count: bookingsForServiceCount, error: bookingsForServiceCountError } = await supabase
+    //             .from('vendor_bookings')
+    //             .select('*', { count: "exact", head: true })
+    //             .eq("service_id", service?.id)    
+    //             .gte("day", new Date().toISOString().split("T")[0])   
                 
-            if(bookingsForServiceCountError){
-                console.error(bookingsForServiceCountError)
-                throw new Error()
-            }
+    //         if(bookingsForServiceCountError){
+    //             console.error(bookingsForServiceCountError)
+    //             throw new Error()
+    //         }
 
-            if(bookingsForServiceCount > 0){
-                hide()
+    //         if(bookingsForServiceCount > 0){
+    //             hide()
 
-                setApiReqs({ isLoading: false, errorMsg: null, data: null })
-                toast.info("A booking at a future date exists for this service. You must complete that booking before you can delete the service")
+    //             setApiReqs({ isLoading: false, errorMsg: null, data: null })
+    //             toast.info("A booking at a future date exists for this service. You must complete that booking before you can delete the service")
 
-                return;
-            }
+    //             return;
+    //         }
             
-            const { error: deleteBookingsError } = await supabase
-                .from("vendor_bookings")
-                .delete()
-                .eq("vendor_id", profile?.id)
-                .eq('service_id', service?.id)
+    //         const { error: deleteBookingsError } = await supabase
+    //             .from("vendor_bookings")
+    //             .delete()
+    //             .eq("vendor_id", profile?.id)
+    //             .eq('service_id', service?.id)
 
-            const { error: deleteServiceError } = await supabase
-                .from('vendor_services')
-                .delete()
-                .eq('vendor_id', profile?.id)
-                .eq('id', service?.id)
+    //         const { error: deleteServiceError } = await supabase
+    //             .from('vendor_services')
+    //             .delete()
+    //             .eq('vendor_id', profile?.id)
+    //             .eq('id', service?.id)
 
-            if(deleteServiceError || deleteBookingsError){
-                console.error("deleteServiceError", deleteServiceError)
-                console.error("deleteBookingsError", deleteBookingsError)
+    //         if(deleteServiceError || deleteBookingsError){
+    //             console.error("deleteServiceError", deleteServiceError)
+    //             console.error("deleteBookingsError", deleteBookingsError)
 
-                throw new Error()
-            }
+    //             throw new Error()
+    //         }
 
-            const updatedServices = (services || []).filter(s => s?.id !== service?.id)
-            const updatedBookings = (bookings || []).filter(b => b?.service_id !== service?.id)
+    //         const updatedServices = (services || []).filter(s => s?.id !== service?.id)
+    //         const updatedBookings = (bookings || []).filter(b => b?.service_id !== service?.id)
 
-            dispatch(setUserDetails({
-                services: updatedServices,
-                bookings: updatedBookings
-            }))
+    //         dispatch(setUserDetails({
+    //             services: updatedServices,
+    //             bookings: updatedBookings
+    //         }))
 
-            hide()
-            toast.success("Service deleted")
+    //         hide()
+    //         toast.success("Service deleted")
             
-        } catch (error) {
-            console.error(error)
-            return deleteServiceFailure({ errorMsg: 'Something went wrong! Try again.' })
-        }
-    }
-    const deleteServiceFailure = ({ errorMsg }) => {
-        setApiReqs({ isLoading: false, errorMsg, data: null })
-        toast.error(errorMsg)
+    //     } catch (error) {
+    //         console.error(error)
+    //         return deleteServiceFailure({ errorMsg: 'Something went wrong! Try again.' })
+    //     }
+    // }
+    // const deleteServiceFailure = ({ errorMsg }) => {
+    //     setApiReqs({ isLoading: false, errorMsg, data: null })
+    //     toast.error(errorMsg)
 
-        return
-    }
+    //     return
+    // }
 
     if(!service) return <></>
 
@@ -164,8 +164,9 @@ const HideService = ({
                     <Modal
                         onClose={hide}
                         image="/assets/brush.svg"
-                        title={service?.status === 'hidden' ? 'Delete' : "Hide Service"}
-                        description={service?.status === 'hidden' ? 'Deleting a service removes it completely. This action cannot be undone' : "Hiding this service will invisble to users. All bookings already made will not be affected, but new bookings cannot be made. Only hidden services can be deleted."}
+                        title={service?.status === 'hidden' ? 'Show' : "Hide Service"}
+                        // description={service?.status === 'hidden' ? 'Deleting a service removes it completely. This action cannot be undone' : "Hiding this service will invisble to users. All bookings already made will not be affected, but new bookings cannot be made. Only hidden services can be deleted."}
+                        description={service?.status === 'hidden' ? 'This service will now be visible by all users. Thus, it can accept new bookings' : 'Hiding this service will invisble to users. All bookings already made along with rescheduled bookings will not be affected, but new bookings cannot be made.'}
                         primaryButton='Proceed'
                         secondaryButton='Cancel'
                         secondaryButtonFunc={hide}
@@ -174,7 +175,8 @@ const HideService = ({
                                 isLoading: true,
                                 errorMsg: null,
                                 data: {
-                                    type: service?.status === 'hidden' ? 'deleteService' : 'hideService'
+                                    // type: service?.status === 'hidden' ? 'deleteService' : 'hideService'
+                                    type: service?.status === 'hidden' ? "showService" : 'hideService'
                                 }
                             })
                         }}

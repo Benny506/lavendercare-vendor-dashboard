@@ -13,10 +13,10 @@ import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
 import { sendNotifications } from "@/lib/notifications";
 
 export default function Chat({
-    userInfo={},
-    selectedChat={},
-    setSidebar=()=>{},
-}){
+    userInfo = {},
+    selectedChat = {},
+    setSidebar = () => { },
+}) {
 
     const dispatch = useDispatch()
 
@@ -25,7 +25,7 @@ export default function Chat({
     const bottomRef = useRef(null)
     const topRef = useRef(null)
 
-    const [input, setInput] = useState("");    
+    const [input, setInput] = useState("");
 
     const meId = profile?.id
     const peerId = userInfo?.id
@@ -33,8 +33,8 @@ export default function Chat({
 
     const {
         sendMessage, messages, status, insertSubStatus, updateSubStatus, onlineUsers, bulkMsgsRead,
-        loadMessages, canLoadMoreMsgs
-    } = useDirectChat({ 
+        loadMessages, canLoadMoreMsgs, refreshConnection
+    } = useDirectChat({
         topic,
         meId,
         peerId,
@@ -44,19 +44,18 @@ export default function Chat({
 
     useEffect(() => {
         if (messages?.length > 0) {
-            // flatListRef.current?.scrollToEnd({ animated: true });
             bottomRef?.current?.scrollIntoView({ behaviour: 'smooth' })
 
-            handleReadUnreadMsgs()           
+            handleReadUnreadMsgs()
         }
     }, [messages]);
 
     const handleReadUnreadMsgs = () => {
         const unReadMsgsIds = (messages || [])?.filter(msg => (!msg?.read_at && msg?.to_user === meId)).map(msg => msg?.id)
 
-        bulkMsgsRead(unReadMsgsIds)        
-    }  
-    
+        bulkMsgsRead(unReadMsgsIds)
+    }
+
     const loadMoreMessages = async () => {
         try {
             dispatch(appLoadStart())
@@ -71,15 +70,15 @@ export default function Chat({
                 topRef?.current?.scrollIntoView({ behaviour: 'smooth' })
                 clearTimeout(scrollToTopDelay)
             }, 0)
-                        
+
         } catch (error) {
             console.warn(error)
             toast.error('Error retrieving messages')
 
-        } finally{
+        } finally {
             dispatch(appLoadStop())
         }
-    }      
+    }
 
     const updateStatusToAwaitingCompletion = async () => {
         try {
@@ -94,12 +93,12 @@ export default function Chat({
             console.log(error)
             toast.error("Error updating appointment status. Contact support after this session")
         }
-    }  
-    
-    const sendNow = () => {
-        const myMessagesCount = (messages || []).filter(msg => msg.from_user == meId).length 
+    }
 
-        if(myMessagesCount === 1){
+    const sendNow = () => {
+        const myMessagesCount = (messages || []).filter(msg => msg.from_user == meId).length
+
+        if (myMessagesCount === 1) {
             // On first msg, update the booking status to awaiting_completion
             updateStatusToAwaitingCompletion()
         }
@@ -107,8 +106,8 @@ export default function Chat({
         if (!input.trim()) return;
         sendMessage({ text: input.trim(), toUser: peerId, bookingId: selectedChat?.id });
         setInput('');
-    };   
-    
+    };
+
     const notifyMother = async () => {
         try {
             dispatch(appLoadStart())
@@ -119,20 +118,20 @@ export default function Chat({
                 title: `Incoming message from lavendercare vendor provider`,
                 body: `New message detected`,
                 data: {}
-            });    
-            
+            });
+
             toast.success("Mother notified!")
-                        
+
         } catch (error) {
             console.log(error)
             toast.error("Error notifying mother. Messages have been sent though, she can view them on her lavendercare app")
-        
-        } finally{
+
+        } finally {
             dispatch(appLoadStop())
         }
     }
 
-    return(
+    return (
         <div className="flex-1 flex flex-col">
             {/* Header */}
             <div className="bg-primary-50 flex items-center justify-between p-4 border-b border-grey-200">
@@ -145,29 +144,29 @@ export default function Chat({
                     </button>
                     {
                         userInfo?.name
-                        ?
+                            ?
                             <>
-                                <img 
+                                <img
                                     className="border-primary-400 rounded-full h-12 w-12"
                                     src={userInfo?.profile_img || "https://res.cloudinary.com/dqcmfizfd/image/upload/v1756168978/testing/mother-family-mom-svgrepo-com_uz0o5c.png"}
                                     alt={userInfo?.profile_img ? "Profile image" : "Dummy profile"}
-                                />                            
+                                />
                                 <div>
                                     <p className="text-grey-800 text-xl font-bold">{userInfo?.name}</p>
                                     <p className="font-semibold text-xs text-primary-600 text-gray-900">
                                         {peerOnline ? 'online' : onlineUsers.length > 0 ? 'offline' : ''}
-                                    </p>                                    
+                                    </p>
                                     {/* <span className="text-primary-500 italic">Typing...</span> */}
-                                </div>                            
+                                </div>
                             </>
-                        :
+                            :
                             <>
 
                             </>
                     }
                 </div>
 
-                <button 
+                <button
                     onClick={notifyMother}
                     className="text-sm bg-purple-600 hover:bg-purple-700 text-white cursor-pointer rounded-lg px-3 py-1"
                 >
@@ -218,114 +217,117 @@ export default function Chat({
                             No messages to display
                         </p>
                         <p className="text-sm text-grey-500 text-center">
-                            Messages from tour clients will appear here. Select a chat from the menu
+                            Messages from your clients will appear here. Select a chat from the menu
                         </p>
                     </div>
                 ) : (
-                        ['initial', ...messages].map((msg, i) => {
+                    ['initial', ...messages].map((msg, i) => {
 
-                            if(msg === 'initial' && canLoadMoreMsgs){
-                                return (
-                                    <div
-                                        key={msg}
-                                        ref={topRef}
-                                        className="flex items-center justify-center my-2"
-                                    >
-                                        <div onClick={loadMoreMessages} className="cursor-pointer px-2 py-2 rounded-full bg-purple-600">
-                                            <RotateCw size={20} color="#FFF" />
-                                        </div>
-                                    </div>
-                                )
+                        if (msg === 'initial') {
+                            if (!canLoadMoreMsgs) {
+                                return <></>
                             }
-
-                            const { message, from_user, pending, failed, created_at, read_at, delivered_at } = msg
-
-                            const iAmSender = from_user === meId ? true : false
-
-                            const seen = read_at ? true : false
-                            const delivered = delivered_at ? true : false
-
                             return (
-                                <div key={i} className={`flex ${iAmSender ? 'justify-end' : 'justify-start'}`}>
-                                    <div>
-                                        <div className={`max-w-xs ${iAmSender
-                                            ? 'bg-purple-600 text-white'
-                                            : 'bg-gray-100 text-gray-900'
-                                            } rounded-2xl px-4 py-3`}>
-                                            {msg.isVoice ? (
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                                                        <Mic className="w-4 h-4" />
-                                                    </div>
-                                                    <div className="flex-1 h-2 bg-white bg-opacity-20 rounded-full">
-                                                        <div className="w-1/3 h-full bg-white rounded-full"></div>
-                                                    </div>
-                                                    <span className="text-xs opacity-75">0:15</span>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <p className="text-sm mb-3">{message}</p>
-
-                                                    <div className="flex flex-col items-end justify-end gap-">
-                                                        <p 
-                                                            style={{
-                                                                color: iAmSender ? '#FFF' : "_000"
-                                                            }}
-                                                            className="txt-10 m-0 p-0"
-                                                        >
-                                                            { isoToAMPM({ isoString: created_at }) }
-                                                        </p>
-
-                                                        {
-                                                            iAmSender
-                                                            &&
-                                                                (
-                                                                    seen
-                                                                    ?
-                                                                        <CheckCheck size={11} color="#FFF" />
-                                                                    :
-                                                                    delivered
-                                                                    &&
-                                                                        <Check size={11} color="#FFF" />
-                                                                )
-                                                        }
-                                                    </div>                                                                    
-                                                </>
-                                            )}
-                                        </div>
-
-                                        <div className="flex items-center justify-end">
-                                            {
-                                                pending
-                                                ?
-                                                    // <Tooltip>
-                                                    //     <TooltipTrigger asChild>
-                                                            <ClockFading color="#6F3DCB" size={15} />
-                                                        // </TooltipTrigger>
-                                                    //     <TooltipContent side="top" sideOffset={5}>
-                                                    //         Pending message. Sending...
-                                                    //     </TooltipContent>
-                                                    // </Tooltip>                                                                    
-                                                :
-                                                failed 
-                                                &&
-                                                    // <Tooltip>
-                                                    //     <TooltipTrigger asChild>
-                                                            <MessageCircleWarning color="#c41a2b" size={15} />
-                                                        // </TooltipTrigger>
-                                                    //     <TooltipContent side="top" sideOffset={5}>
-                                                    //         Error sending message
-                                                    //     </TooltipContent>
-                                                    // </Tooltip>                                                                
-                                            }                                                    
-                                        </div>
+                                <div
+                                    key={msg}
+                                    ref={topRef}
+                                    className="flex items-center justify-center my-2"
+                                >
+                                    <div onClick={loadMoreMessages} className="cursor-pointer px-2 py-2 rounded-full bg-purple-600">
+                                        <RotateCw size={20} color="#FFF" />
                                     </div>
                                 </div>
                             )
-                        })
+                        }
+
+                        const { message, from_user, pending, failed, created_at, read_at, delivered_at } = msg
+
+                        const iAmSender = from_user === meId ? true : false
+
+                        const seen = read_at ? true : false
+                        const delivered = delivered_at ? true : false
+
+                        return (
+                            <div key={i} className={`flex ${iAmSender ? 'justify-end' : 'justify-start'}`}>
+                                <div>
+                                    <div className={`max-w-xs ${iAmSender
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-gray-100 text-gray-900'
+                                        } rounded-2xl px-4 py-3`}>
+                                        {msg.isVoice ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                                    <Mic className="w-4 h-4" />
+                                                </div>
+                                                <div className="flex-1 h-2 bg-white bg-opacity-20 rounded-full">
+                                                    <div className="w-1/3 h-full bg-white rounded-full"></div>
+                                                </div>
+                                                <span className="text-xs opacity-75">0:15</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <p className="text-sm mb-3">{message}</p>
+
+                                                <div className="flex flex-col items-end justify-end gap-">
+                                                    <p
+                                                        style={{
+                                                            color: iAmSender ? '#FFF' : "_000"
+                                                        }}
+                                                        className="txt-10 m-0 p-0"
+                                                    >
+                                                        {isoToAMPM({ isoString: created_at })}
+                                                    </p>
+
+                                                    {
+                                                        iAmSender
+                                                        &&
+                                                        (
+                                                            seen
+                                                                ?
+                                                                <CheckCheck size={11} color="#FFF" />
+                                                                :
+                                                                delivered
+                                                                &&
+                                                                <Check size={11} color="#FFF" />
+                                                        )
+                                                    }
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center justify-end">
+                                        {
+                                            pending
+                                                ?
+                                                // <Tooltip>
+                                                //     <TooltipTrigger asChild>
+                                                <ClockFading color="#6F3DCB" size={15} />
+                                                // </TooltipTrigger>
+                                                //     <TooltipContent side="top" sideOffset={5}>
+                                                //         Pending message. Sending...
+                                                //     </TooltipContent>
+                                                // </Tooltip>                                                                    
+                                                :
+                                                failed
+                                                &&
+                                                // <Tooltip>
+                                                //     <TooltipTrigger asChild>
+                                                <MessageCircleWarning color="#c41a2b" size={15} />
+                                            // </TooltipTrigger>
+                                            //     <TooltipContent side="top" sideOffset={5}>
+                                            //         Error sending message
+                                            //     </TooltipContent>
+                                            // </Tooltip>                                                                
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })
                 )}
 
-                <div ref={bottomRef} />   
+                <div ref={bottomRef} />
             </div>
 
 
@@ -334,7 +336,7 @@ export default function Chat({
                 (
                     (status == 'subscribed' && insertSubStatus == 'subscribed' && updateSubStatus == 'subscribed')
                 )
-                &&
+                ?
                     <div className="flex items-center gap-2 p-3 border-t border-grey-200">
                         <div className="relative flex-1">
                             <Input
@@ -357,17 +359,26 @@ export default function Chat({
                             />
                         </div>
                         {/* <div className="bg-primary-500 rounded-full text-grey-50 p-2 cursor-pointer w-10 h-10 flex items-center justify-center">
-                            <Icon icon="material-symbols:mic-outline" width="22" height="22" />
-                        </div> */}
+                                <Icon icon="material-symbols:mic-outline" width="22" height="22" />
+                            </div> */}
                         <Button
                             onClick={sendNow}
                             size="sm"
                             className="h-10 px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-full"
                         >
                             Send
-                        </Button>                        
-                    </div>                
+                        </Button>
+                    </div>
+                :
+                    <div className="flex items-center justify-center">
+                        <div
+                            onClick={refreshConnection}
+                            className="text-center font-medium bg-purple-600 text-white m-3 py-3 px-7 cursor-pointer rounded-lg"
+                        >
+                            Want to send a msg?
+                        </div>
+                    </div>
             }
-        </div>        
+        </div>
     )
 }

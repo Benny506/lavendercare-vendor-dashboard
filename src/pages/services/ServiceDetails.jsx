@@ -266,8 +266,11 @@ export default function ServiceDetails() {
             Edit Availability
           </Button>
 
-          <Button onClick={() => setEditModals({ type: 'hide_service' })} className="bg-red-700 rounded-4xl py-6 px-5 text-white">
-            { service?.status === 'hidden' ? 'Delete' : 'Hide' }
+          <Button 
+            onClick={() => setEditModals({ type: 'hide_service' })} 
+            className={`${service?.status === 'hidden' ? 'bg-green-700' : 'bg-red-700'} rounded-4xl py-6 px-5 text-white`}
+          >
+            { service?.status === 'hidden' ? 'Show' : 'Hide' }
           </Button>          
         </div>
 
