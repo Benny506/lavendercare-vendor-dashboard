@@ -43,7 +43,7 @@ const HideService = ({
         try {
 
             const { data, error } = await supabase
-                .from('vendor_services')
+                .from('services')
                 .update({
                     status
                 })
@@ -119,7 +119,7 @@ const HideService = ({
     //             .eq('service_id', service?.id)
 
     //         const { error: deleteServiceError } = await supabase
-    //             .from('vendor_services')
+    //             .from('services')
     //             .delete()
     //             .eq('vendor_id', profile?.id)
     //             .eq('id', service?.id)
