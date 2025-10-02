@@ -11,9 +11,10 @@ import ConfirmAppointmentSuccess from './ConfirmAppointmentSuccess'
 import { useSelector } from 'react-redux'
 import { getUserDetailsState } from '@/redux/slices/userDetailsSlice'
 import { toast } from 'react-toastify'
-import { clockTimer, formatNumberWithCommas, isoToDateTime, timeToAMPM_FromHour } from '@/lib/utils'
+import { clockTimer, formatNumberWithCommas, formatTo12Hour, isoToDateTime, secondsToLabel, timeToAMPM_FromHour } from '@/lib/utils'
 import { bookingsMap } from '@/lib/utilsJsx'
 import { Dot } from 'lucide-react'
+import HourSelect from '@/components/HourSelect'
 
 const BookingDetails = () => {
     const navigate = useNavigate()
@@ -59,10 +60,10 @@ const BookingDetails = () => {
     useEffect(() => {
         if(!booking) return;
 
-        const { day, start_hour } = booking
+        const { start_time } = booking
 
         const timerInterval = setInterval(() => {
-            const { str, isZero } = clockTimer({ targetDate: day, startHour: start_hour })
+            const { str, isZero } = clockTimer({ start_time })
 
             setTimerStr(str)
 
@@ -166,7 +167,7 @@ const BookingDetails = () => {
                     <div>
                         <div className='flex items-center justify-between gap-4 w-full py-3 font-bold text-lg'>
                             <p>Appointment set for:</p>
-                            <p>{ booking?.day } / { timeToAMPM_FromHour({ hour: booking?.start_hour }) } - { timeToAMPM_FromHour({ hour: booking?.end_hour }) }</p>
+                            <p>{ booking?.day } / { formatTo12Hour({ time: booking?.start_time }) } / { secondsToLabel({ seconds: booking?.duration }) }</p>
                         </div>
                     </div>
                 </div>
@@ -212,25 +213,25 @@ const BookingDetails = () => {
                     <div className="flex flex-col item-ceter justify-between bg-grey-100 rounded-2xl p-4">
                         <div className="flex flex-col gap-2 items-center w-full border-b border-grey-200 pb-3 space-y-1">                        
 
-                            <div className='flex items-center justify-between gap-4 w-full'>
+                            {/* <div className='flex items-center justify-between gap-4 w-full'>
                                 <p>Type:</p>
                                 <p className='font-semibold capitalize'>{ booking?.pricing_type }</p>
-                            </div>
+                            </div> */}
 
                             <div className='flex items-center justify-between gap-4 w-full'>
                                 <p>Cost:</p>
-                                <p className='font-semibold'> { booking?.currency } { formatNumberWithCommas(booking?.amount) } </p>
+                                <p className='font-semibold'> { booking?.currency } { formatNumberWithCommas(booking?.price) } </p>
                             </div>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <div className='flex items-center justify-between gap-4 w-full py-3 font-bold text-lg'>
                                 <p>Total:</p>
                                 <p>
-                                    { booking?.currency } { formatNumberWithCommas(booking?.amount) }
+                                    { booking?.currency } { formatNumberWithCommas(booking?.price) }
                                 </p>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

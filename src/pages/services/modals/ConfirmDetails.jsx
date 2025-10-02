@@ -40,7 +40,7 @@ const ConfirmDetails = ({
     try {
 
       const { data, error } = await supabase
-        .from('vendor_services')
+        .from('services')
         .insert({
           ...requestInfo,
           vendor_id: profile?.id

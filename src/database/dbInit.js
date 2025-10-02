@@ -46,6 +46,11 @@ export async function vendorLogin({ email, password }) {
   }
 }
 export async function getVendorDetails({ id }){
+  const { data: bankData, error: bankError } = await supabase
+    .from("banks")
+    .select('*')
+    .eq('vendor_id', id) 
+
   const { data: profileData, error: profileError } = await supabase
     .from("vendor_profiles")
     .select('*')
@@ -58,20 +63,20 @@ export async function getVendorDetails({ id }){
     .eq('user_id', id)
 
   const { data: vendorServicesData, error: vendorServicesError } = await supabase
-    .from('vendor_services')
+    .from('services')
     .select('*')
     .eq('vendor_id', id) 
     .limit(1000) 
 
   const { data: bookingsData, error: bookingsError } = await supabase
-    .from('vendor_bookings')
+    .from('all_bookings')
     .select(`
       *,
       user_profile: user_profiles(*) 
     `)
     .eq('vendor_id', id)
     .order("day", { ascending: true, nullsFirst: false })      
-    .order('start_hour', { ascending: true, nullsFirst: false })
+    .order('start_time', { ascending: true, nullsFirst: false })
     .limit(1000)    
 
   if(
@@ -82,11 +87,14 @@ export async function getVendorDetails({ id }){
       bookingsError
       ||
       phone_number_error
+      || 
+      bankError
     ){
     console.log("Profile error", profileError)
     console.log("Vendor services error", vendorServicesError)
     console.log("Bookings error", bookingsError)
     console.log("Phone number error", phone_number_error)
+    console.log("banks error", bankError)
     return { error: "Error getting vendor profile", data: null };
   }
 
@@ -95,7 +103,8 @@ export async function getVendorDetails({ id }){
       profile: profileData,
       services: vendorServicesData,
       bookings: bookingsData,
-      phone_number: phone_number[0]
+      phone_number: phone_number[0],
+      bank: bankData[0]
     },
     error: null
   }

@@ -6,11 +6,41 @@ import { appLoadStart, appLoadStop } from '../../redux/slices/appLoadingSlice';
 import { getMessages, setChannelIds } from '../../redux/slices/messagesSlice';
 import { toast } from 'react-toastify';
 
-export function useDirectChat({ topic, meId }) {
+const isAdmin = false
+const isVendor = false
+const isCommunity = false
 
-  const isAdmin = false
-  const isVendor = true
-  const isCommunity = false
+// utility to check if messages are the same by ID + read/delivered/read_at
+function areMessagesEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; i++) {
+    const msgA = a[i];
+    const msgB = b[i];
+
+    if (
+      msgA.read_at !== msgB.read_at ||
+      msgA.delivered_at !== msgB.delivered_at ||
+      msgA.pending !== msgB.pending ||
+      msgA.failed !== msgB.failed
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// wrapper around setMessages
+function safeSetMessages(setter, updater) {
+  setter(prev => {
+    const next = typeof updater === "function" ? updater(prev) : updater;
+    return areMessagesEqual(prev, next) ? prev : next;
+  });
+}
+
+export function useDirectChat({ topic, meId }) {
 
   const dispatch = useDispatch()
 
@@ -30,6 +60,14 @@ export function useDirectChat({ topic, meId }) {
 
   const tableName = isCommunity ? 'community_chat' : isAdmin ? 'admin_mothers_chat' : isVendor ? 'vendor_bookings_chats' : 'bookings_chats'
   const rpcName = isCommunity ? 'fetch_and_mark_community_chat_messages' : isAdmin ? 'mark_and_get_admin_mother_messages' : isVendor ? 'mark_vendor_messages_delivered_and_read' : 'fetch_and_mark_booking_chat_messages'
+
+  // const safeSetMessages = (updater) => {
+  //   setMessages(prev => {
+  //     const next = updater(prev);
+  //     return shallowEqual(prev, next) ? prev : next;
+  //   });
+  // }
+
 
   const sendMessage = useCallback(
     async ({ text, toUser, bookingId, channel_id, community_id, user_profile }) => {
@@ -90,6 +128,7 @@ export function useDirectChat({ topic, meId }) {
           );
 
         } else {
+          console.log("Sending msg to the channel")
           channelRef.current?.send({
             type: 'broadcast',
             event: 'sendMsg',
@@ -107,6 +146,7 @@ export function useDirectChat({ topic, meId }) {
 
   // mark a message as delivered
   const messageDelivered = async (messageId, read_at) => {
+    console.log('running messageDelivered')
     const { data, error } = await supabase
       .from(tableName)
       .update({ delivered_at: new Date().toISOString() })
@@ -190,6 +230,7 @@ export function useDirectChat({ topic, meId }) {
 
   const onMsgReceived = (msg) => {
     if (msg?.to_user === meId) {
+      console.log('running inner onMsgReceived')
 
       const msgId = msg?.id
       const msgDelivered = messages.find(m => (m?.id == msgId) && m?.delivered_at)
@@ -202,6 +243,7 @@ export function useDirectChat({ topic, meId }) {
 
   const onMsgRead = (msg) => {
     if (msg?.to_user === meId) {
+      console.log("Running onMsgRead")
 
       const msgId = msg?.id
       const msgRead = messages.find(m => (m?.id == msgId) && m?.read_at)
@@ -219,7 +261,7 @@ export function useDirectChat({ topic, meId }) {
 
     //all msgs sent to "by_id" that aren't read/delivered are now read/delivered at timestamp  
 
-    const updatedMsgs = [...msgsRef.current];
+    const updatedMsgs = [...msgsRef.current].reverse();
 
     for (let i = 0; i < updatedMsgs.length; i++) {
       const msg = updatedMsgs[i];
@@ -237,6 +279,7 @@ export function useDirectChat({ topic, meId }) {
 
   // helper: dedupe messages by id
   const dedupeMessages = (msgs) => {
+    console.log("running dedupeMessages")
     const seen = new Set();
     return msgs.filter((msg) => {
       if (seen.has(msg.id)) return false;
@@ -246,6 +289,7 @@ export function useDirectChat({ topic, meId }) {
   };
 
   const replaceOptimisticMessages = (msgs, newMsg) => {
+    console.log("running replaceOptimisticMessages")
     const idx = msgs.findIndex((msg) => msg.id === newMsg.id);
     if (idx !== -1) {
       // Replace optimistic message
@@ -273,14 +317,15 @@ export function useDirectChat({ topic, meId }) {
     });
   };
 
-  const loadMessages = async ({ msgLoadedTimeStamp, last_loaded_at, isOlder }) => {
-
+  const loadMessages = useCallback(async ({ msgLoadedTimeStamp, last_loaded_at, isOlder }) => {
+    console.log("running loadMessages")
     if (savedMsgs && savedMsgs?.length > 0) {
       const lastSavedMsg = savedMsgs[savedMsgs?.length - 1]
       const lastSavedMsg_createdAt = lastSavedMsg?.created_at
 
       //no msg, first time loading!
       if (!last_loaded_at) {
+        console.log("loading from redux state")
         return afterMsgsLoaded(savedMsgs, { isOlder })
       }
     }
@@ -306,8 +351,10 @@ export function useDirectChat({ topic, meId }) {
     }
 
     console.log(error)
-  };
+  }, [meId, topic]);
+
   const afterMsgsLoaded = (_msgs, { isOlder = false } = {}) => {
+    console.log("running afterMsgsLoaded")
     const msgs = [..._msgs].reverse(); // normalize to ASC
 
     setMessages((prev) =>
@@ -333,12 +380,16 @@ export function useDirectChat({ topic, meId }) {
 
     channel.on('broadcast', { event: 'sendMsg' }, (payload) => {
       const msg = payload.payload
+      console.log("sendMsgEvt Running replaceOptimisticMessages")
       setMessages((prev) => replaceOptimisticMessages(prev || [], msg));
+      console.log("sendMsgEvt Runnung onMsgReceived")
       onMsgReceived(msg)
     })
 
     channel.on('broadcast', { event: 'messageRead' }, (payload) => {
       const msg = payload.payload
+      console.log(msg)
+      console.log("messageRead Running replaceOptimisticMessages")
       setMessages((prev) => replaceOptimisticMessages(prev || [], msg));
     })
 
@@ -350,8 +401,10 @@ export function useDirectChat({ topic, meId }) {
 
     channel.on('broadcast', { event: 'messageDelivered' }, (payload) => {
       const msg = payload.payload
+      console.log("messageDeliveredEvt Running replaceOptimisticMessages")
       setMessages((prev) => replaceOptimisticMessages(prev || [], msg));
       if (!isAdmin && !isCommunity) {
+        console.log("messageDeliveredEvt Running onMsgRead")
         onMsgRead(msg)
       }
     })
@@ -413,6 +466,7 @@ export function useDirectChat({ topic, meId }) {
         },
         (payload) => {
           const newMsg = payload.new;
+          console.log("insertSub Running replaceOptimisticMessages")
           setMessages((prev) => replaceOptimisticMessages(prev || [], newMsg));
           onMsgReceived(newMsg)
         }
@@ -446,10 +500,11 @@ export function useDirectChat({ topic, meId }) {
         },
         (payload) => {
           const newMsg = payload.new;
+          console.log("updateSub Running replaceOptimisticMessages")
           setMessages((prev) => replaceOptimisticMessages(prev || [], newMsg));
-          if (!isAdmin && !isCommunity) {
-            onMsgRead(newMsg)
-          }
+          // if (!isAdmin && !isCommunity) {
+          //   onMsgRead(newMsg)
+          // }
         }
       )
       .subscribe(status => {

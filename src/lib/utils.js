@@ -33,34 +33,16 @@ export function formatNumberWithCommas(value) {
   return Number(value).toLocaleString();
 }
 
-export function getAppointmentStatus({ status, date_ISO, startHour, endHour }) {
+export function getAppointmentStatus({ status, start_time, duration_secs }) {
   const now = DateTime.now();
+  const bookingStartTime = DateTime.fromISO(start_time);
+  const bookingEndTime = bookingStartTime.plus({ seconds: duration_secs });
 
-  // Build start and end times on the given date
-  const bookingStartTime = DateTime.fromISO(date_ISO).set({
-    hour: startHour,
-    minute: 0,
-    second: 0,
-    millisecond: 0,
-  });
-
-  const bookingEndTime = DateTime.fromISO(date_ISO).set({
-    hour: endHour,
-    minute: 0,
-    second: 0,
-    millisecond: 0,
-  });
-
-  // Helper flags
   const hasStarted = now >= bookingStartTime;
   const hasEnded = now > bookingEndTime;
 
-  // 1) If the appointment is new and is currently in progress
-  if (
-    (status === "new" || status == "awaiting_completion") &&
-    hasStarted &&
-    !hasEnded
-  ) {
+  // 1) If the appointment is new/awaiting_completion and ongoing
+  if ((status === "new" || status === "awaiting_completion") && hasStarted && !hasEnded) {
     return "ongoing";
   }
 
@@ -69,7 +51,7 @@ export function getAppointmentStatus({ status, date_ISO, startHour, endHour }) {
     return hasStarted ? "missed" : "new";
   }
 
-  // 3) Cancelled → as is
+  // 3) cancelled → as is
   if (status === "cancelled") {
     return "cancelled";
   }
@@ -84,32 +66,71 @@ export function getAppointmentStatus({ status, date_ISO, startHour, endHour }) {
     return "awaiting_completion";
   }
 
-  // Fallback to the raw status
+  // fallback
   return status;
 }
 
+export function formatTo12Hour({ time }) {
+  const date = typeof time === "string" ? new Date(time) : time;
 
-export function clockTimer({ targetDate, startHour }) {
-  const now = new Date();
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
 
-  // Parse target date and add startHour
-  const target = new Date(targetDate);
-  target.setHours(startHour, 0, 0, 0);
+  hours = hours % 12;
+  hours = hours ? hours : 12; // hour '0' should be '12'
 
-  // Difference in milliseconds
-  const diff = target.getTime() - now.getTime();
+  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
 
-  if (diff <= 0) {
+  return `${hours}:${minutesStr} ${ampm}`;
+}
+
+export function formatSlot(slot, userZone = "local") {
+  // slot is in UTC from Supabase
+  const dt = DateTime.fromISO(slot, { zone: "utc" });
+
+  // convert to user zone
+  const local = userZone === "local" ? dt.toLocal() : dt.setZone(userZone);
+
+  // format in 12hr style e.g. 8:15 AM
+  return local.toFormat("h:mm a");
+}
+
+export function secondsToLabel({ seconds }) {
+  const mins = Math.floor(seconds / 60);
+  const hours = Math.floor(mins / 60);
+  const remainingMins = mins % 60;
+
+  if (hours > 0 && remainingMins > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMins} min${remainingMins > 1 ? 's' : ''}`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''}`;
+  } else {
+    return `${remainingMins} min${remainingMins > 1 ? 's' : ''}`;
+  }
+}
+export function clockTimer({ start_time }) {
+  const now = DateTime.now();
+  const target = DateTime.fromISO(start_time, { zone: "utc" }).toLocal(); // convert to local
+
+  // Difference as Duration
+  const diff = target.diff(now, ["days", "hours", "minutes", "seconds"]).toObject();
+
+  if (target <= now) {
     return { str: "00days : 00hr : 00mins : 00secs", isZero: true };
   }
 
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-  const minutes = Math.floor((diff / (1000 * 60)) % 60);
-  const seconds = Math.floor((diff / 1000) % 60);
+  const days = Math.floor(diff.days ?? 0);
+  const hours = Math.floor(diff.hours ?? 0);
+  const minutes = Math.floor(diff.minutes ?? 0);
+  const seconds = Math.floor(diff.seconds ?? 0);
 
-  return { str: `${days}days : ${hours}hr : ${minutes}mins : ${seconds}secs`, isZero: false };
+  return {
+    str: `${days}days : ${hours}hr : ${minutes}mins : ${seconds}secs`,
+    isZero: false,
+  };
 }
+
 
 export function timeToAMPM_FromHour({ hour }) {
   const date = new Date();

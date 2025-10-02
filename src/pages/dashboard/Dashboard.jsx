@@ -170,7 +170,7 @@ export default function Dashboard() {
     try {
 
       const { count: totalBookingCount, error: totalBookingCountError } = await supabase
-        .from("vendor_bookings")
+        .from("bookings")
         .select("*", { count: "exact", head: true }) 
         .eq("vendor_id", profile?.id);
 

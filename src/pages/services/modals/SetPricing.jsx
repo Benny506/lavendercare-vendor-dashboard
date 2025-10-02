@@ -1,35 +1,50 @@
 import ErrorMsg1 from "@/components/ErrorMsg1";
 import Modal from "@/components/Modal"
 import { currencies } from "@/constants/constant";
+import { formatNumberWithCommas, secondsToLabel, timeToAMPM_FromHour_Duration } from "@/lib/utils";
 import { ErrorMessage, Formik } from "formik";
+import { X } from "lucide-react";
 import React, { useState } from "react";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 import * as yup from 'yup'
 
-const SetPricing = ({ 
-        isOpen, 
-        hide, 
-        goBackAStep, 
-        info={},
-        handleContinueBtnClick=()=>{},
-        continueBtnText
-    }) => {
+const durationsOptions = [
+    { title: '15 mins', value: 15 * 60 },     // 900
+    { title: '30 mins', value: 30 * 60 },     // 1800
+    { title: '1 hour', value: 60 * 60 },      // 3600
+];
+const SetPricing = ({
+    isOpen,
+    hide,
+    goBackAStep,
+    info = {},
+    handleContinueBtnClick = () => { },
+    continueBtnText
+}) => {
 
     return (
         <>
             {isOpen && (
                 <Formik
                     validationSchema={yup.object().shape({
-                        pricing_type: yup.string().required('Pricing type is required'),
+                        // pricing_type: yup.string().required('Pricing type is required'),
                         currency: yup.string().required("Currency is required"),
-                        amount: yup.string().matches(/^[0-9]+$/, "Only numbers are allowed").required("A valid amount is required")
+                        base_price: yup.string().matches(/^[0-9]+$/, "Only numbers are allowed").required("A valid base price is required"),
+                        base_duration: yup.string().matches(/^[0-9]+$/, "Only numbers are allowed").required("A valid base duration is required"),
                     })}
                     initialValues={{
                         currency: info?.currency,
-                        pricing_type: info?.pricing_type || '', 
-                        amount: info?.amount || ''
+                        base_price: info?.base_price,
+                        base_duration: info?.base_duration
+                        // pricing_type: info?.pricing_type || '', 
+                        // amount: info?.amount || ''
                     }}
                     onSubmit={values => {
-                        handleContinueBtnClick(values)
+                        handleContinueBtnClick({
+                            ...values,                            
+                        })
                     }}
                 >
                     {({ handleBlur, handleChange, handleSubmit, values }) => (
@@ -53,7 +68,7 @@ const SetPricing = ({
                             }}
                         >
                             <div className="space-y-4">
-                                <div>
+                                {/* <div>
                                     <label className="block text-sm font-medium">Pricing type</label>
                                     <select 
                                         name="pricing_type"
@@ -69,11 +84,11 @@ const SetPricing = ({
                                     <ErrorMessage name="pricing_type">
                                         { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
                                     </ErrorMessage>
-                                </div>
+                                </div> */}
 
                                 <div>
                                     <label className="block text-sm font-medium">Currency</label>
-                                    <select 
+                                    <select
                                         name="currency"
                                         value={values.currency}
                                         onChange={handleChange}
@@ -87,31 +102,60 @@ const SetPricing = ({
                                                     key={cIndex}
                                                     value={c}
                                                 >
-                                                    { c }
+                                                    {c}
                                                 </option>
                                             ))
                                         }
                                     </select>
                                     <ErrorMessage name="currency">
-                                        { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
+                                        {errorMsg => <ErrorMsg1 errorMsg={errorMsg} />}
                                     </ErrorMessage>
-                                </div>                                
+                                </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium">Amount/Session</label>
+                                <div className="">
+                                    <label className="block text-sm font-medium">Base Duration. This is the smallest time duration that this service can be delivered for</label>
+                                    <select
+                                        name="base_duration"
+                                        value={values.base_duration}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        type="number"
+                                        placeholder="Set a duration"
+                                        className="w-full border border-gray-300 rounded-md p-2 mt-1 focus:outline-none"
+                                    >
+                                        <option value={''} selected disabled>Set a duration</option>
+                                        {
+                                            durationsOptions.map((d, i) => {
+                                                const { title, value } = d
+
+                                                return (
+                                                    <option value={value}>
+                                                        {title}
+                                                    </option>
+                                                )
+                                            })
+                                        }
+                                    </select>
+                                    <ErrorMessage name="base_duration">
+                                        {errorMsg => <ErrorMsg1 errorMsg={errorMsg} />}
+                                    </ErrorMessage>                                    
+                                </div>
+
+                                <div className="">
+                                    <label className="block text-sm font-medium">Base price</label>
                                     <input
-                                        name="amount"
-                                        value={values.amount}
+                                        name="base_price"
+                                        value={values.base_price}
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                         type="number"
                                         placeholder="0.00"
                                         className="w-full border border-gray-300 rounded-md p-2 mt-1 focus:outline-none"
                                     />
-                                    <ErrorMessage name="amount">
-                                        { errorMsg => <ErrorMsg1 errorMsg={errorMsg} /> }
-                                    </ErrorMessage>                                    
-                                </div>
+                                    <ErrorMessage name="base_price">
+                                        {errorMsg => <ErrorMsg1 errorMsg={errorMsg} />}
+                                    </ErrorMessage>                                     
+                                </div>                                
                             </div>
                         </Modal>
                     )}

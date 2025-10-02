@@ -1,7 +1,7 @@
 import ErrorMsg1 from "@/components/ErrorMsg1";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
-import { cities, countries, services, states, vendorServicesOptions } from "@/constants/constant";
+import { cities, countries, NigerianCities, services, states, vendorServicesOptions } from "@/constants/constant";
 import { ErrorMessage, Formik } from "formik";
 import { Minus } from "lucide-react";
 import { useState } from "react";
@@ -137,12 +137,10 @@ export default function DuplicateService({
                                             City where your service is located
                                         </option>
                                         {
-                                            cities.filter(c => c?.country === values?.country && c?.state === values?.state).map((c, i) => {
-                                                const { title, value } = c
-
+                                            NigerianCities.filter(c => c?.state === values?.state)[0]?.lgas.map((c, i) => {
                                                 return (
-                                                    <option key={i} value={value}>
-                                                        { title }
+                                                    <option key={i} value={c}>
+                                                        { c }
                                                     </option>
                                                 )
                                             })

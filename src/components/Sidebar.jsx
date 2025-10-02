@@ -172,10 +172,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               className='rounded-full h-8 w-8'
             />
           :
-            <Avatar>
-              <AvatarImage src="/assets/Avatar.svg" />
-              {/* <AvatarFallback>CN</AvatarFallback> */}
-            </Avatar>          
+            <></>        
         }
         <div className="flex-1">
           <div className="font-bold text-md text-[#2D1A4A]">{profile?.business_name}</div>

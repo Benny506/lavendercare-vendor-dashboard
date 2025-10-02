@@ -288,9 +288,7 @@ const BusinessProfile = () => {
                                                     ?
                                                     <img src={profileImgPreview || values?.profile_img} alt="Profile image" className="border-grey-50 border-2 shadow-2xl w-16 h-16 sm:w-18 sm:h-18 rounded-full" />
                                                     :
-                                                    <Avatar className="border-grey-50 border-2 shadow-2xl w-16 h-16 sm:w-18 sm:h-18 rounded-full">
-                                                        <AvatarImage src="/assets/avatar-2.svg" alt="User avatar" />
-                                                    </Avatar>
+                                                    <span className="text-gray-600 font-medium text-xs">Profile not set</span>
                                             }
 
                                             {/* Info */}
@@ -326,6 +324,9 @@ const BusinessProfile = () => {
                                     className="hidden"
                                     onChange={e => {
                                         const file = e.currentTarget.files?.[0] ?? null
+
+                                        if(!file) return;
+
                                         setFieldValue("profile_img", file)
 
                                         if (file) {

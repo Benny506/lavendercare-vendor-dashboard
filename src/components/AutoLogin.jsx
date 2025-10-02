@@ -52,7 +52,7 @@ export default function AutoLogin({ children }){
 
             } else {
 
-                const { profile, services, bookings, phone_number } = infoData
+                const { profile, services, bookings, phone_number, bank } = infoData
 
                 dispatch(setUserDetails({
                     user,
@@ -60,7 +60,8 @@ export default function AutoLogin({ children }){
                     profile,
                     services,
                     bookings,
-                    phone_number
+                    phone_number,
+                    bank
                 }))
 
                 setAppLoading(false)

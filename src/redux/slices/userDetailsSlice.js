@@ -12,7 +12,8 @@ const userDetailsSlice = createSlice({
         phone_number: {
             phone_number: null,
             country_code: null
-        }
+        },
+        bank: null
     },
     reducers: {
         setUserDetails: (state, action) => {
@@ -35,15 +36,14 @@ const userDetailsSlice = createSlice({
             if(action?.payload?.bookings){
                 const bookings = (action.payload?.bookings || []).map(b => {
 
-                    const { status, start_hour, end_hour, day } = b
+                    const { status, start_time, duration } = b
 
                     return {
                         ...b,
                         status: getAppointmentStatus({
                             status,
-                            date_ISO: new Date(day).toISOString(),
-                            startHour: start_hour,
-                            endHour: end_hour
+                            startHour: start_time,
+                            duration_secs: duration 
                         })
                     }
                 })
@@ -59,6 +59,10 @@ const userDetailsSlice = createSlice({
                     state.phone_number.phone_number = number?.phone_number
                 }
             }
+
+            if(action?.payload?.bank){
+                state.bank = action?.payload?.bank
+            }
         },
         clearUserDetails: (state, action) => {
             state.profile = null
@@ -70,6 +74,7 @@ const userDetailsSlice = createSlice({
                 phone_number: null,
                 country_code: null                
             }
+            state.bank = null
         }        
     }
 })

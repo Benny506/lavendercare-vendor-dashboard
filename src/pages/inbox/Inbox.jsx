@@ -71,14 +71,14 @@ const Inbox = () => {
             const to = from + limit - 1;
 
             const { data, error } = await supabase
-                .from('vendor_bookings')
+                .from('all_bookings')
                 .select(`
                     *,
                     user_profile: user_profiles(*) 
                 `)
                 .eq('vendor_id', profile?.id)
                 .order("day", { ascending: true, nullsFirst: false })
-                .order('start_hour', { ascending: true, nullsFirst: false })
+                .order('start_time', { ascending: true, nullsFirst: false })           
                 .limit(limit)
                 .range(from, to);
 

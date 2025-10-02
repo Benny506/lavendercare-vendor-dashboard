@@ -69,7 +69,7 @@ export const onRequestApi = async ({ requestInfo, successCallBack, failureCallba
         
         } else{
             console.log(errorMsg)
-            const _errorMsg = "Unexpected server error"
+            const _errorMsg = errorMsg?.details?.message || "Unexpected server error"
             return failureCallback({ requestInfo, errorMsg: _errorMsg, statusCode })
         }
         

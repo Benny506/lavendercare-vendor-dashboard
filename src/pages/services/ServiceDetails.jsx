@@ -14,7 +14,7 @@ import CancelChangesSuccess from "./modals/CancelChangesSuccess";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getServiceStatusColor, getServiceStatusFeedBack } from "@/lib/utilsJsx";
-import { formatNumberWithCommas } from "@/lib/utils";
+import { formatNumberWithCommas, secondsToLabel } from "@/lib/utils";
 import SetPricing from "./modals/SetPricing";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,6 +25,7 @@ import SetServiceDetails from "./modals/SetServiceDetails";
 import SetAvailability from "./modals/SetAvailability";
 import AddServiceModal from "./modals/AddServiceModal";
 import DuplicateService from "./modals/DuplicateService";
+import SetServiceHours from "./modals/SetServiceHours";
 
 export default function ServiceDetails() {
   const dispatch = useDispatch()
@@ -83,7 +84,7 @@ export default function ServiceDetails() {
     try {
 
       const { data, error } = await supabase
-        .from('vendor_services')
+        .from('services')
         .insert(requestInfo)
         .select()
         .single()
@@ -118,7 +119,7 @@ export default function ServiceDetails() {
     try {
 
       const { data, error } = await supabase
-        .from('vendor_services')
+        .from('services')
         .update(requestInfo)
         .eq('id', service_id)
         .select()
@@ -163,8 +164,8 @@ export default function ServiceDetails() {
 
   if(!service) return <></>
 
-  const { id, service_name, availability, pricing_type, currency, amount,
-    status, service_category, service_details, location, country, city
+  const { id, service_name, availability, pricing_type, currency, amount, base_price, base_duration,
+    status, service_category, service_details, location, country, city, pricing
    } = service
 
 
@@ -207,21 +208,10 @@ export default function ServiceDetails() {
     })
   }
 
-  const updatePricing = ({ currency, pricing_type, amount }) => {
-    if(!currency || !pricing_type || !amount){
+  const updatePricing = ({ currency, base_duration, base_price }) => {
+    if(!currency || !base_duration || !base_price){
       toast.info("Not all fields are set")
       return
-    }
-
-    if(
-      currency === service?.currency
-      &&
-      pricing_type === service?.pricing_type
-      &&
-      amount === service?.amount
-    ){
-      toast.info("No changes found")
-      return;
     }
 
     setApiReqs({
@@ -230,7 +220,7 @@ export default function ServiceDetails() {
       data: {
         type: 'editService',
         requestInfo: {
-          currency, pricing_type, amount
+          currency, base_duration, base_price
         }
       }
     })
@@ -304,19 +294,21 @@ export default function ServiceDetails() {
 
       {/* Pricing Section */}
       <div className="bg-white rounded-lg p-4 shadow mb-6">
-        <h3 className="text-xl font-bold text-grey-700 mb-3">Pricing</h3>
-
-        <div className="flex item-ceter justify-between bg-grey-100 rounded-2xl p-4">
-          <div className="flex flex-wrap items-center gap-5">
-            <span>Type : <Badge className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">{pricing_type}</Badge></span>
-            <div>|</div>
-            <span>Price/Session: <strong> {formatNumberWithCommas(amount)} </strong></span>
-            <div>|</div>
-            <span>Currency: <strong> {currency} </strong></span>
-          </div>
+        <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
+          <h3 className="text-xl font-bold text-grey-700">Pricing</h3>
           <Button onClick={() => setEditModals({ type: 'pricing' })} variant="ghost" className="text-primary-500">
             <Icon icon="mdi:edit-outline" width="30" height="30" />Edit Pricing
-          </Button>
+          </Button>          
+        </div>
+
+        <div className="bg-grey-100 rounded-2xl p-4">
+          <div className="flex flex-col items-start gap-5">
+            {/* <span>Type : <Badge className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">{pricing_type}</Badge></span>
+            <div>|</div> */}
+            <span>Currency: <strong> {currency} </strong></span>
+            <span>Base price: <strong> {formatNumberWithCommas(base_price)} </strong></span>
+            <span>Base Duration: <strong> {secondsToLabel({ seconds: base_duration })} </strong></span>
+          </div>
         </div>
       </div>
 
@@ -434,9 +426,9 @@ export default function ServiceDetails() {
       />
       {/* <HideServiceSuccess /> */}
 
-      <SetPricing 
+      <SetPricing
           info={{
-            currency, amount, pricing_type
+            currency, base_price, base_duration
           }} 
           goBackAStep={() => setEditModals({ type: null })}
           isOpen={editModals.type == 'pricing'}
@@ -469,7 +461,7 @@ export default function ServiceDetails() {
           handleContinueBtnClick={updateServiceDetails}  
           continueBtnText="Save"              
       /> */}
-      <SetAvailability
+      {/* <SetAvailability
           info={{
             ...availability
           }} 
@@ -478,7 +470,17 @@ export default function ServiceDetails() {
           goBackAStep={() => setEditModals({ type: null })}        
           handleContinueBtnClick={updateAvailability}   
           continueBtnText="Save"                   
-      />
+      /> */}
+      <SetServiceHours
+          info={{
+            ...availability
+          }} 
+          isOpen={editModals.type == 'availability'}
+          hide={() => setEditModals({ type: null })}
+          goBackAStep={() => setEditModals({ type: null })}        
+          handleContinueBtnClick={updateAvailability}   
+          continueBtnText="Save"                   
+      />     
 
       <DuplicateService 
           isOpen={editModals.type == 'duplicate_service'}

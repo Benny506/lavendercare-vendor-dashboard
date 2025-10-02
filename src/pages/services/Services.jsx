@@ -27,6 +27,7 @@ import { Dot } from "lucide-react";
 import { appLoadStart, appLoadStop } from "@/redux/slices/appLoadingSlice";
 import { toast } from "react-toastify";
 import supabase from "@/database/dbInit";
+import SetServiceHours from "./modals/SetServiceHours";
 
 
 const LIMIT = 100
@@ -279,8 +280,8 @@ export default function Services() {
                         <div className="flex flex-wrap p-4 justify-between">
                             {filteredServices.map((service, i) => {
                                 
-                                const { service_name, service_category, pricing_type,
-                                    amount, status, currency, country, state, city, location
+                                const { service_name, service_category,
+                                    base_price, status, currency, country, state, city, location
                                 } = service
 
                                 return (
@@ -302,7 +303,7 @@ export default function Services() {
                                             </div>
 
                                             <p className="text-sm text-grey-700 font-medium">
-                                                {pricing_type} Price: {currency} {formatNumberWithCommas(amount)}
+                                                Base Price: {currency} {formatNumberWithCommas(base_price)}
                                             </p>
 
                                             <div className="flex items-center flex-wrap gap-1">
@@ -402,7 +403,7 @@ export default function Services() {
                     }
                 }))}                
             />
-            <SetAvailability 
+            {/* <SetAvailability 
                 info={newService.details.availability} 
                 isOpen={newService.step == 'availability'}  
                 hide={() => setNewService({ step: null, details: {} })}
@@ -414,7 +415,20 @@ export default function Services() {
                         availability: args
                     }
                 }))}                   
-            />
+            /> */}
+            <SetServiceHours 
+                info={newService.details.availability} 
+                isOpen={newService.step == 'availability'}  
+                hide={() => setNewService({ step: null, details: {} })}
+                goBackAStep={() => setNewService(prev => ({ ...prev, step: 'pricing' }))}          
+                handleContinueBtnClick={(args) => setNewService(prev => ({
+                    step: 'confirm',
+                    details: {
+                        ...prev.details,
+                        availability: args
+                    }
+                }))}                   
+            />            
             <ConfirmDetails 
                 info={newService}
                 isOpen={newService.step == 'confirm'}  

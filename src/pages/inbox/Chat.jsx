@@ -53,7 +53,9 @@ export default function Chat({
     const handleReadUnreadMsgs = () => {
         const unReadMsgsIds = (messages || [])?.filter(msg => (!msg?.read_at && msg?.to_user === meId)).map(msg => msg?.id)
 
-        bulkMsgsRead(unReadMsgsIds)
+        if(unReadMsgsIds?.length > 0){
+            bulkMsgsRead(unReadMsgsIds)
+        }
     }
 
     const loadMoreMessages = async () => {
@@ -80,27 +82,12 @@ export default function Chat({
         }
     }
 
-    const updateStatusToAwaitingCompletion = async () => {
-        try {
-            await supabase
-                .from('vendor_bookings')
-                .update({
-                    status: 'awaiting_completion'
-                })
-                .eq("id", selectedChat?.id)
-
-        } catch (error) {
-            console.log(error)
-            toast.error("Error updating appointment status. Contact support after this session")
-        }
-    }
-
     const sendNow = () => {
         const myMessagesCount = (messages || []).filter(msg => msg.from_user == meId).length
 
         if (myMessagesCount === 1) {
             // On first msg, update the booking status to awaiting_completion
-            updateStatusToAwaitingCompletion()
+            // updateStatusToAwaitingCompletion()
         }
 
         if (!input.trim()) return;
