@@ -171,6 +171,10 @@ const HideService = ({
                         secondaryButton='Cancel'
                         secondaryButtonFunc={hide}
                         primaryButtonFunc={() => {
+                            if(service?.status === 'pending'){
+                                toast.info("Wait till service has been reviewed by admin!")
+                                return 
+                            }
                             setApiReqs({
                                 isLoading: true,
                                 errorMsg: null,

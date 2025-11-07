@@ -389,6 +389,7 @@ export default function Services() {
                         serviceInfo: args
                     }
                 }))}
+                setApiReqs={setApiReqs}
             />
             <SetPricing 
                 info={newService.details.pricing} 

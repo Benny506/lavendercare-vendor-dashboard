@@ -18,7 +18,7 @@ export default function VerifyEmail() {
     const [apiReqs, setApiReqs] = useState({ isLoading: false, errorMsg: null, data: null })
 
     useEffect(() => {
-        if(!state?.email) navigate(-1);
+        if(!state?.email) navigate('/new-vendor');
     }, [state])
 
     useEffect(() => {
@@ -104,6 +104,7 @@ export default function VerifyEmail() {
                         <OtpInput 
                             onValidated={onValidated}
                             email={email}
+                            goBackPath={'/new-vendor'}
                             fromForgotPassword={fromForgotPassword}
                         />
                     </div>
