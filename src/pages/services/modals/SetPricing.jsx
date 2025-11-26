@@ -113,7 +113,7 @@ const SetPricing = ({
                                 </div>
 
                                 <div className="">
-                                    <label className="block text-sm font-medium">Base Duration. This is the smallest time duration that this service can be delivered for</label>
+                                    <label className="block text-sm font-medium">Session duration</label>
                                     <select
                                         name="base_duration"
                                         value={values.base_duration}
@@ -123,7 +123,7 @@ const SetPricing = ({
                                         placeholder="Set a duration"
                                         className="w-full border border-gray-300 rounded-md p-2 mt-1 focus:outline-none"
                                     >
-                                        <option value={''} selected disabled>Set a duration</option>
+                                        <option value={''} selected disabled>How long will this session last for?</option>
                                         {
                                             durationsOptions.map((d, i) => {
                                                 const { title, value } = d
@@ -142,7 +142,7 @@ const SetPricing = ({
                                 </div>
 
                                 <div className="">
-                                    <label className="block text-sm font-medium">Base price</label>
+                                    <label className="block text-sm font-medium">Price per session</label>
                                     <input
                                         name="base_price"
                                         value={values.base_price}
