@@ -110,7 +110,6 @@ export default function AddServiceModal({
                                             placeholder="e.g Deep tissue massage"
                                             className="w-full border border-grey-300 rounded-md p-2"
                                         />
-                                        <span className="block text-end text-sm my-2 text-grey-500">{values.service_name.length}/20</span>
                                         <ErrorMessage name="service_name">
                                             {errorMsg => <ErrorMsg1 errorMsg={errorMsg} />}
                                         </ErrorMessage>
