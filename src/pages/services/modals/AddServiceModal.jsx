@@ -58,7 +58,7 @@ export default function AddServiceModal({
                 <>
                     <Formik
                         validationSchema={yup.object().shape({
-                            service_name: yup.string().max(20, "Must not be more than 20 characters").required("Service name is required"),
+                            service_name: yup.string().required("Service name is required"),
                             service_category: yup.string().required("Service category is required"),
                             service_details: yup.string().required("Service details is required"),
                             location: yup.string().required("Service location is required"),
