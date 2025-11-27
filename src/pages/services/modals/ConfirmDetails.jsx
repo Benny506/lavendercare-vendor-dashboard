@@ -53,7 +53,7 @@ const ConfirmDetails = ({
         throw new Error()
       }
 
-      const updatedServices = [...(services || []), data]
+      const updatedServices = [data, ...(services || [])]
 
       setApiReqs({ isLoading: false, data: null, errorMsg: null })
 
