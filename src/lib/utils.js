@@ -245,3 +245,12 @@ export const sortByStatusPriority = (arr) => {
     return aIndex - bIndex;
   });
 };
+
+export function splitSeconds(seconds) {
+  const total = Number(seconds) || 0; // safety
+
+  const hour = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+
+  return { hour, minutes };
+}

@@ -64,7 +64,10 @@ export async function getVendorDetails({ id }){
 
   const { data: vendorServicesData, error: vendorServicesError } = await supabase
     .from('services')
-    .select('*')
+    .select(`
+      *,
+      types: service_types ( * )  
+    `)
     .eq('vendor_id', id) 
     .limit(1000) 
 

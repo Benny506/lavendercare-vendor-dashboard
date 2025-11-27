@@ -81,16 +81,15 @@ const ConfirmDetails = ({
   const handleConfirm = () => {
     try {
       const { details } = info
-      const { serviceInfo, pricing, availability } = details
+      const { serviceInfo, availability } = details
 
-      if(!serviceInfo || !pricing || !availability){
+      if(!serviceInfo || !availability){
         toast.error("Some fields were not field, go back and confirm")
         return
       }
 
       const requestInfo = {
         ...serviceInfo,
-        ...pricing,
         availability
       }
 

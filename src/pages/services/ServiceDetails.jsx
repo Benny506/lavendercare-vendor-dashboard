@@ -26,6 +26,11 @@ import SetAvailability from "./modals/SetAvailability";
 import AddServiceModal from "./modals/AddServiceModal";
 import DuplicateService from "./modals/DuplicateService";
 import SetServiceHours from "./modals/SetServiceHours";
+import ServiceType from "./modals/ServiceType";
+import { data } from "react-router-dom";
+import ZeroItems from "@/components/ZeroItems";
+import { Delete } from "lucide-react";
+import { Trash } from "lucide-react";
 
 export default function ServiceDetails() {
   const dispatch = useDispatch()
@@ -46,17 +51,17 @@ export default function ServiceDetails() {
   const [service, setService] = useState()
 
   useEffect(() => {
-    if(!service_id){
+    if (!service_id) {
       navigate('/services')
     }
 
     const s = (services || []).filter(s => s?.id === service_id)[0]
-    
-    if(!s){
+
+    if (!s) {
       toast.info("Unable to find service")
       navigate('/services')
-    
-    } else{
+
+    } else {
       setService(s)
     }
   }, [service_id, services])
@@ -64,23 +69,182 @@ export default function ServiceDetails() {
   useEffect(() => {
     const { isLoading, data } = apiReqs
 
-    if(isLoading) dispatch(appLoadStart());
+    if (isLoading) dispatch(appLoadStart());
     else dispatch(appLoadStop())
 
-    if(isLoading && data){
+    if (isLoading && data) {
       const { type, requestInfo } = data
 
-      if(type == 'editService'){
+      if (type == 'editService') {
         editService({ requestInfo })
       }
 
-      if(type === 'duplicateService'){
+      if (type === 'duplicateService') {
         duplicateService({ requestInfo })
+      }
+
+      if (type === 'insertTypes') {
+        insertTypes({ requestInfo })
+      }
+
+      if (type === 'updateTypes') {
+        updateTypes({ requestInfo })
+      }
+
+      if (type === 'deleteType') {
+        deleteType({ requestInfo })
       }
     }
   }, [apiReqs])
 
-    const duplicateService = async ({ requestInfo }) => {
+  const deleteType = async ({ requestInfo }) => {
+    try {
+
+      const { type_id } = requestInfo
+
+      if (!type_id) throw new Error();
+
+      const { data, error } = await supabase
+        .from("service_types")
+        .delete()
+        .eq("id", type_id)
+
+      if (error) {
+        console.log(error)
+        throw new Error()
+      }
+
+      const updatedService = {
+        ...(service || {}),
+        types: (service?.types || [])?.filter(t => t?.id !== type_id)
+      }
+
+      const updatedServices = services?.map(s => {
+        if (s?.id === service?.id) {
+          return updatedService
+        }
+
+        return s
+      })
+
+      console.log(updatedServices)
+
+      setService(updatedService)
+      dispatch(setUserDetails({ services: updatedServices }))
+
+      setApiReqs({ isLoading: false, errorMsg: null, data: null })
+      dispatch(appLoadStop())
+
+      setEditModals({ type: null })
+
+      toast.success("Session info saved")
+
+    } catch (error) {
+      console.log(error)
+      apiReqError({ errorMsg: 'Something went wrong! Try again' })
+    }
+  }
+
+  const updateTypes = async ({ requestInfo }) => {
+    try {
+
+      const { update, type_id } = requestInfo
+
+      if (!update || !type_id) throw new Error();
+
+      const { data, error } = await supabase
+        .from("service_types")
+        .update(update)
+        .eq("id", type_id)
+        .select()
+        .single()
+
+      if (error) {
+        console.log(error)
+        if (error.message?.toLowerCase().includes("duplicate key")) return apiReqError({ errorMsg: 'Session with this duration already exists for this service' });
+        throw new Error()
+      }
+
+      const updatedService = {
+        ...(service || {}),
+        types: (service?.types || [])?.map(t => {
+          if (t?.id === type_id) {
+            return data
+          }
+
+          return t
+        })
+      }
+
+      const updatedServices = services?.map(s => {
+        if (s?.id === service?.id) {
+          return updatedService
+        }
+
+        return s
+      })
+
+      setService(updatedService)
+      dispatch(setUserDetails({ services: updatedServices }))
+
+      setApiReqs({ isLoading: false, errorMsg: null, data: null })
+      dispatch(appLoadStop())
+
+      setEditModals({ type: null })
+
+      toast.success("Session info saved")
+
+    } catch (error) {
+      console.log(error)
+      apiReqError({ errorMsg: 'Something went wrong! Try again' })
+    }
+  }
+
+  const insertTypes = async ({ requestInfo }) => {
+    try {
+
+      const { data, error } = await supabase
+        .from("service_types")
+        .insert(requestInfo)
+        .select()
+        .single()
+
+      if (error) {
+        console.log(error)
+        if (error.message?.toLowerCase().includes("duplicate key")) return apiReqError({ errorMsg: 'Session with this duration already exists for this service' });
+        throw new Error()
+      }
+
+      const updatedService = {
+        ...(service || {}),
+        types: [data, ...(service?.types || [])]
+      }
+
+      const updatedServices = services?.map(s => {
+        if (s?.id === service?.id) {
+          return updatedService
+        }
+
+        return s
+      })
+
+      setService(updatedService)
+      dispatch(setUserDetails({ services: updatedServices }))
+
+      setApiReqs({ isLoading: false, errorMsg: null, data: null })
+      dispatch(appLoadStop())
+
+      setEditModals({ type: null })
+
+      toast.success("Session info saved")
+
+    } catch (error) {
+      console.log(error)
+      apiReqError({ errorMsg: 'Something went wrong! Try again' })
+    }
+  }
+
+  const duplicateService = async ({ requestInfo }) => {
     try {
 
       const { data, error } = await supabase
@@ -89,7 +253,7 @@ export default function ServiceDetails() {
         .select()
         .single()
 
-      if(error){
+      if (error) {
         console.log(error)
         throw new Error()
       }
@@ -102,7 +266,7 @@ export default function ServiceDetails() {
       dispatch(setUserDetails({ services: updatedServices }))
 
       toast.success("Service duplicated with different location")
-      
+
     } catch (error) {
       console.log(error)
       return duplicateServiceFailure({ errorMsg: 'Something went wrong! Try again' })
@@ -125,13 +289,13 @@ export default function ServiceDetails() {
         .select()
         .single()
 
-      if(error){
+      if (error) {
         console.log(error)
         throw new Error()
       }
 
       const updatedServices = (services || []).map(s => {
-        if(s.id === id){
+        if (s.id === id) {
           return {
             ...s,
             ...requestInfo
@@ -149,7 +313,7 @@ export default function ServiceDetails() {
 
       return
 
-      
+
     } catch (error) {
       console.log(error)
       return editServiceFailure({ errorMsg: 'Something went wrong! Try again' })
@@ -162,15 +326,23 @@ export default function ServiceDetails() {
     return
   }
 
-  if(!service) return <></>
+
+  const apiReqError = ({ errorMsg }) => {
+    setApiReqs({ isLoading: false, errorMsg, data: null })
+    toast.error(errorMsg)
+
+    return;
+  }
+
+  if (!service) return <></>
 
   const { id, service_name, availability, pricing_type, currency, amount, base_price, base_duration,
     status, service_category, service_details, location, country, city, pricing
-   } = service
+  } = service
 
 
   const updateAvailability = (availability) => {
-    if(!availability){
+    if (!availability) {
       toast.info("Not all fields are set")
       return
     }
@@ -184,11 +356,11 @@ export default function ServiceDetails() {
           availability
         }
       }
-    })    
+    })
   }
 
   const updateServiceDetails = ({ service_details, service_category, location, service_name }) => {
-    if(!service_details || !service_category || !location || !service_name){
+    if (!service_details || !service_category || !location || !service_name) {
       toast.info("Not all fields are set")
       return
     }
@@ -200,8 +372,8 @@ export default function ServiceDetails() {
         type: 'editService',
         requestInfo: {
           service_details,
-          service_category, 
-          location, 
+          service_category,
+          location,
           service_name
         }
       }
@@ -209,7 +381,7 @@ export default function ServiceDetails() {
   }
 
   const updatePricing = ({ currency, base_duration, base_price }) => {
-    if(!currency || !base_duration || !base_price){
+    if (!currency || !base_duration || !base_price) {
       toast.info("Not all fields are set")
       return
     }
@@ -244,7 +416,7 @@ export default function ServiceDetails() {
         </button>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button  
+          <Button
             onClick={() => setEditModals({ type: 'duplicate_service' })}
             className="bg-purple-600 rounded-4xl py-6 px-5 text-white"
           >
@@ -256,12 +428,12 @@ export default function ServiceDetails() {
             Edit Availability
           </Button>
 
-          <Button 
-            onClick={() => setEditModals({ type: 'hide_service' })} 
+          <Button
+            onClick={() => setEditModals({ type: 'hide_service' })}
             className={`${service?.status === 'hidden' ? 'bg-green-700' : 'bg-red-700'} rounded-4xl py-6 px-5 text-white`}
           >
-            { service?.status === 'hidden' ? 'Show' : 'Hide' }
-          </Button>          
+            {service?.status === 'hidden' ? 'Show' : 'Hide'}
+          </Button>
         </div>
 
         {/* Edit Availabity Modals  */}
@@ -273,18 +445,18 @@ export default function ServiceDetails() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-xl font-bold text-grey-700"> { service_name } </h2>
+        <h2 className="text-xl font-bold text-grey-700"> {service_name} </h2>
         <div className="flex gap-2">
-          <Badge variant="secondary" className="text-xs border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3 capitalize"> { service_category?.replaceAll("_", " ") } </Badge>
+          <Badge variant="secondary" className="text-xs border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3 capitalize"> {service_category?.replaceAll("_", " ")} </Badge>
         </div>
       </div>
 
-      <div 
+      <div
         className={`flex gap-4 my-6 w-full p-4 rounded-2xl ${getServiceStatusColor({ status })}`}
       >
         <div className="flex flex-col justify-between">
           <p className="text-md font-bold">
-            { status }
+            {status}
           </p>
           <p className="text-sm">
             {getServiceStatusFeedBack({ status })}
@@ -295,21 +467,79 @@ export default function ServiceDetails() {
       {/* Pricing Section */}
       <div className="bg-white rounded-lg p-4 shadow mb-6">
         <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
-          <h3 className="text-xl font-bold text-grey-700">Pricing</h3>
-          <Button onClick={() => setEditModals({ type: 'pricing' })} variant="ghost" className="text-primary-500">
-            <Icon icon="mdi:edit-outline" width="30" height="30" />Edit Pricing
-          </Button>          
+          <h3 className="text-xl font-bold text-grey-700">Session Types</h3>
+          <Button onClick={() => setEditModals({ type: 'serviceType' })} variant="ghost" className="text-primary-500">
+            <Icon icon="mdi:edit-outline" width="30" height="30" />Add
+          </Button>
         </div>
 
-        <div className="bg-grey-100 rounded-2xl p-4">
-          <div className="flex flex-col items-start gap-5">
-            {/* <span>Type : <Badge className=" border border-grey-600 text-grey-700 bg-transparent rounded-4xl py-2 px-3">{pricing_type}</Badge></span>
-            <div>|</div> */}
-            <span>Currency: <strong> {currency} </strong></span>
-            <span>Base price: <strong> {formatNumberWithCommas(base_price)} </strong></span>
-            <span>Base Duration: <strong> {secondsToLabel({ seconds: base_duration })} </strong></span>
-          </div>
-        </div>
+        {
+          service?.types?.length > 0
+            ?
+            <div className="flex items-center justify-between flex-wrap">
+              {
+                service?.types?.map((t, i) => {
+                  return (
+                    <div
+                      key={i}
+                      className="w-1/2 px-2"
+                    >
+                      <div className="bg-grey-100 rounded-2xl mb-4">
+                        <div className="p-4">
+                          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                            <h3 className="m-0 p-0 font-bold">Name</h3>
+                            <p className="text-gray-900 m-0 p-0">{t?.type_name}</p>
+                          </div>
+
+                          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                            <h3 className="m-0 p-0 font-bold">Duration</h3>
+                            <p className="text-gray-900 m-0 p-0">{secondsToLabel({ seconds: t?.duration })}</p>
+                          </div>
+
+                          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                            <h3 className="m-0 p-0 font-bold">Price</h3>
+                            <p className="text-gray-900 m-0 p-0">{t?.currency} {formatNumberWithCommas(t?.price)}</p>
+                          </div>
+
+                        </div>
+
+                        <hr />
+
+                        <div className="flex items-center justify-between mt-4 gap-2">
+                          <Button onClick={() => setEditModals({ type: 'serviceType', info: t })} variant="ghost" className="text-primary-500">
+                            <Icon icon="mdi:edit-outline" width="30" height="30" />Edit
+                          </Button>
+                          <Button onClick={
+                            () =>
+                              setApiReqs({
+                                isLoading: true,
+                                errorMsg: null,
+                                data: {
+                                  type: 'deleteType',
+                                  requestInfo: { type_id: t?.id }
+                                }
+                              })
+                          }
+                            variant="ghost"
+                            className="text-red-500"
+                          >
+                            <Trash size={30} />Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              }
+            </div>
+            :
+            <div className="flex items-center justify-center">
+              <ZeroItems
+                zeroText1={'No session types added'}
+                zeroText2={'Click add above to create session types'}
+              />
+            </div>
+        }
       </div>
 
       {/* Details Section */}
@@ -320,27 +550,27 @@ export default function ServiceDetails() {
             <Icon icon="mdi:edit-outline" width="30" height="30" />Edit Details
           </Button>
         </div>
-        
+
         <ul className="list-disc list-inside text-gray-600 flex flex-col gap-2 item-ceter justify-between bg-grey-100 rounded-2xl p-4">
           <li style={{
             listStyleType: 'none'
-          }}> 
-            { service_details } 
+          }}>
+            {service_details}
           </li>
           <li className="capitalize">
-            Country: { country?.replaceAll("_", " ") }
-          </li>          
-          <li className="capitalize">
-            State: { service?.state?.replaceAll("_", " ") }
-          </li> 
-          <li className="capitalize">
-            City: { city?.replaceAll("_", " ") }
-          </li>                                       
-          <li className="capitalize">
-            Location: { location }
+            Country: {country?.replaceAll("_", " ")}
           </li>
-        </ul>      
-      </div>    
+          <li className="capitalize">
+            State: {service?.state?.replaceAll("_", " ")}
+          </li>
+          <li className="capitalize">
+            City: {city?.replaceAll("_", " ")}
+          </li>
+          <li className="capitalize">
+            Location: {location}
+          </li>
+        </ul>
+      </div>
 
       {/* Customer Reviews */}
       {/* <div className="bg-white rounded-lg p-4 shadow">
@@ -419,38 +649,64 @@ export default function ServiceDetails() {
       {/* <ShowServiceSuccess /> */}
 
       {/* Uncomment for service modal  */}
-      <HideService 
+      <HideService
         service={service}
         isOpen={editModals?.type === 'hide_service'}
         hide={() => setEditModals({ type: null })}
       />
       {/* <HideServiceSuccess /> */}
 
-      <SetPricing
-          info={{
-            currency, base_price, base_duration
-          }} 
-          goBackAStep={() => setEditModals({ type: null })}
-          isOpen={editModals.type == 'pricing'}
-          hide={() => setEditModals({ type: null })}
-          handleContinueBtnClick={updatePricing}  
-          continueBtnText="Save"              
-      /> 
+      <ServiceType
+        info={editModals?.info}
+        goBackAStep={() => setEditModals({ type: null })}
+        isOpen={editModals.type == 'serviceType'}
+        hide={() => setEditModals({ type: null })}
+        continueBtnText="Save"
+        handleContinueBtnClick={({ requestInfo, info }) => {
+
+          if (info?.id) {
+            setApiReqs({
+              isLoading: true,
+              errorMsg: null,
+              data: {
+                type: 'updateTypes',
+                requestInfo: {
+                  update: requestInfo,
+                  type_id: info?.id
+                }
+              }
+            })
+            return;
+          }
+
+          setApiReqs({
+            isLoading: true,
+            errorMsg: null,
+            data: {
+              type: 'insertTypes',
+              requestInfo: {
+                ...requestInfo,
+                service_id: service?.id
+              }
+            }
+          })
+        }}
+      />
       <AddServiceModal
-          info={{
-            service_details,
-            location,
-            service_category,
-            service_name,
-            country,
-            city,
-            state: service?.state
-          }} 
-          goBackAStep={() => setEditModals({ type: null })}
-          isOpen={editModals.type == 'service_details'}
-          hide={() => setEditModals({ type: null })}
-          handleContinueBtnClick={updateServiceDetails}  
-      />      
+        info={{
+          service_details,
+          location,
+          service_category,
+          service_name,
+          country,
+          city,
+          state: service?.state
+        }}
+        goBackAStep={() => setEditModals({ type: null })}
+        isOpen={editModals.type == 'service_details'}
+        hide={() => setEditModals({ type: null })}
+        handleContinueBtnClick={updateServiceDetails}
+      />
       {/* <SetServiceDetails 
           info={{
             service_details
@@ -472,39 +728,39 @@ export default function ServiceDetails() {
           continueBtnText="Save"                   
       /> */}
       <SetServiceHours
-          info={{
-            ...availability
-          }} 
-          isOpen={editModals.type == 'availability'}
-          hide={() => setEditModals({ type: null })}
-          goBackAStep={() => setEditModals({ type: null })}        
-          handleContinueBtnClick={updateAvailability}   
-          continueBtnText="Save"                   
-      />     
+        info={{
+          ...availability
+        }}
+        isOpen={editModals.type == 'availability'}
+        hide={() => setEditModals({ type: null })}
+        goBackAStep={() => setEditModals({ type: null })}
+        handleContinueBtnClick={updateAvailability}
+        continueBtnText="Save"
+      />
 
-      <DuplicateService 
-          isOpen={editModals.type == 'duplicate_service'}
-          hide={() => setEditModals({ type: null })}
-          handleContinueBtnClick={(args) => {
-            const requestInfo = {
-              ...service,
-              ...args,
-              status: 'pending'
+      <DuplicateService
+        isOpen={editModals.type == 'duplicate_service'}
+        hide={() => setEditModals({ type: null })}
+        handleContinueBtnClick={(args) => {
+          const requestInfo = {
+            ...service,
+            ...args,
+            status: 'pending'
+          }
+
+          delete requestInfo?.id
+          delete requestInfo?.created_at
+
+          setApiReqs({
+            isLoading: true,
+            errorMsg: null,
+            data: {
+              type: 'duplicateService',
+              requestInfo
             }
-
-            delete requestInfo?.id
-            delete requestInfo?.created_at
-
-            setApiReqs({
-              isLoading: true,
-              errorMsg: null,
-              data: {
-                type: 'duplicateService',
-                requestInfo
-              }
-            })
-          }}        
-      />                  
+          })
+        }}
+      />
     </div>
   );
 }
