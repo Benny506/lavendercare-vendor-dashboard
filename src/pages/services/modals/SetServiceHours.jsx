@@ -9,6 +9,27 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import * as yup from 'yup'
 
+function reorderDays(obj) {
+  const order = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
+
+  const sortedObj = {};
+
+  order.forEach(day => {
+    if (obj.hasOwnProperty(day)) {
+      sortedObj[day] = obj[day];
+    }
+  });
+
+  return sortedObj;
+}
 
 const SetServiceHours = ({
     info = {
@@ -53,6 +74,8 @@ const SetServiceHours = ({
         handleContinueBtnClick(days)
     }
 
+    const reorderedDays = reorderDays(days)
+
     return (
         <>
             {isOpen && (
@@ -78,17 +101,17 @@ const SetServiceHours = ({
                         secondaryButton: "w-full px-5 py-3  text-grey-50 bg-primary-500 rounded-4xl",
                     }}
                 >
-                    <div className='border border-grey-100 rounded-md lg:flex block w-full'>
-                        <div className='border-r border-grey-100 py-4 pb-2 px-2  space-y-4 flex flex-row flex-wrap lg:flex-col items-center lg:w-[20%] w-full lg:mb-0 mb-4 font-semibold text-sm'>
-                            {Object.keys(days).map((day, index) => {
+                    <div className='border border-grey-100 rounded-md flex w-full'>
+                        <div className='border-r border-grey-100 py-4 pb-2 px-2  space-y-4 flex flex-wrap flex-col items-center lg:mb-0 mb-4 font-semibold text-sm'>
+                            {Object.keys(reorderedDays).map((day, index) => {
 
                                 const active = day === selectedDay ? true : false
 
                                 const handleDayClick = () => setSelectedDay(day)
 
                                 return (
-                                    <div key={day} onClick={handleDayClick} className={`lg:w-full w-1/2 text-center py-3 ${active ? "text-grey-50 bg-primary-500" : "cursor-pointer hover:bg-gray-100"} p-2 rounded-lg`}>
-                                        <p>{day}</p>
+                                    <div key={day} onClick={handleDayClick} className={`w-full py-3 ${active ? "text-grey-50 bg-primary-500" : "cursor-pointer hover:bg-gray-100"} p-2 rounded-lg`}>
+                                        <p className='capitalize'>{day}</p>
                                     </div>
                                 )
                             }
@@ -134,7 +157,7 @@ const SetServiceHours = ({
                                 }}
                             >
                                 {({ handleBlur, handleChange, handleSubmit, isValid, dirty, values }) => (
-                                    <div className='m-7 flex flex-col items-start justify-center px-2 gap-4'>
+                                    <div className='py-7 flex flex-col items-start justify-center px-4 gap-4'>
                                         <div className=''>
                                             {
                                                 days[selectedDay]?.opening
